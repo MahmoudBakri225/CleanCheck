@@ -1,0 +1,16 @@
+com\mycompany\cleancheck\DataTypeRule.class
+com\mycompany\cleancheck\EmptyIfRule.class
+com\mycompany\cleancheck\InfiniteLoopRule.class
+com\mycompany\cleancheck\TooManyParametersRule.class
+com\mycompany\cleancheck\Rule.class
+com\mycompany\cleancheck\scanner\JavaFileScanner.class
+com\mycompany\cleancheck\Severity.class
+com\mycompany\cleancheck\CleanCheck.class
+com\mycompany\cleancheck\RuleEngine.class
+com\mycompany\cleancheck\VariableNameRule.class
+com\mycompany\cleancheck\DataTypeSyntaxRule.class
+com\mycompany\cleancheck\NameConventionRule.class
+com\mycompany\cleancheck\EmptyMethodRule.class
+com\mycompany\cleancheck\EncapsulationRule.class
+com\mycompany\cleancheck\quality\QualityScore.class
+com\mycompany\cleancheck\Warning.class
