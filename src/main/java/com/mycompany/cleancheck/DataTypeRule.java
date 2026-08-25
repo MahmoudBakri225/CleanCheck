@@ -23,16 +23,12 @@ public class DataTypeRule implements Rule {
         };
 
         Pattern pattern = Pattern.compile("\\b([A-Za-z]+)\\s+\\w+\\s*(=|;)");
-
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
-
-            // ===== 1. فحص الـ Syntax (كتابة النوع صح ولا لأ) =====
             Matcher matcher = pattern.matcher(line);
             while (matcher.find()) {
                 String written = matcher.group(1);
 
-                // فحص الـ primitives
                 for (String correct : correctTypes) {
                     if (written.equalsIgnoreCase(correct) && !written.equals(correct)) {
                         warnings.add(new Warning(
@@ -44,7 +40,6 @@ public class DataTypeRule implements Rule {
                     }
                 }
 
-                // فحص String
                 if (written.equalsIgnoreCase("String") && !written.equals("String")) {
                     warnings.add(new Warning(
                             fileName, i + 1, getName(),
@@ -55,7 +50,6 @@ public class DataTypeRule implements Rule {
                 }
             }
 
-            // ===== 2. فحص استخدام float =====
             if (line.matches(".*\\bfloat\\s+\\w+.*")) {
                 warnings.add(new Warning(
                         fileName, i + 1, getName(),
@@ -65,7 +59,6 @@ public class DataTypeRule implements Rule {
                 ));
             }
 
-            // ===== 3. فحص double مع الفلوس =====
             if (line.matches(".*\\b(double)\\s+.*(price|salary|amount|balance|cost|money).*")) {
                 warnings.add(new Warning(
                         fileName, i + 1, getName(),
@@ -78,5 +71,3 @@ public class DataTypeRule implements Rule {
         return warnings;
     }
 }
-
-

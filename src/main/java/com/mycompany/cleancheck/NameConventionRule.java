@@ -15,11 +15,9 @@ public class NameConventionRule implements Rule {
             "transient", "try", "void", "volatile", "while", "true", "false", "null"
     ));
 
-    // كلاس: class Name
     private static final Pattern CLASS_PATTERN
             = Pattern.compile("\\bclass\\s+([A-Za-z_$][A-Za-z0-9_$]*)");
 
-    // متغير: Type name = ... ; أو Type name;
     private static final Pattern VAR_PATTERN
             = Pattern.compile("^(?:public|private|protected|static|final|\\s)*"
                     + "(?:byte|short|int|long|float|double|boolean|char|String)\\s*(?:\\[\\])?\\s+"
@@ -69,7 +67,7 @@ public class NameConventionRule implements Rule {
                     "Variable name '" + name + "' is a reserved Java keyword.",
                     "Choose a different variable name."));
         } else if (isConstant(name)) {
-            // ثوابت زي MAX_VALUE مقبولة
+            
         } else if (Character.isUpperCase(name.charAt(0))) {
             warnings.add(new Warning(file, line, getName(), Severity.WARNING,
                     "Variable name '" + name + "' should use camelCase.",

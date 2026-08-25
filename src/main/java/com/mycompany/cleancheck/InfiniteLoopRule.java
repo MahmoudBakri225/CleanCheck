@@ -24,7 +24,6 @@ public class InfiniteLoopRule implements Rule {
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim().toLowerCase();
 
-            // while(true) أو while ( true )
             if (line.matches(".*while\\s*\\(\\s*true\\s*\\).*")) {
                 warnings.add(new Warning(
                         fileName, i + 1, getName(),
@@ -34,7 +33,6 @@ public class InfiniteLoopRule implements Rule {
                 ));
             }
 
-            // for(;;)
             if (line.matches(".*for\\s*\\(\\s*;\\s*;\\s*\\).*")) {
                 warnings.add(new Warning(
                         fileName, i + 1, getName(),
