@@ -13,12 +13,10 @@ public class RuleEngine {
         rules.add(new EmptyMethodRule());
         rules.add(new TooManyParametersRule());
         rules.add(new NameConventionRule());
-        
-        //rules.add(new DataTypeSyntaxRule());
+
         rules.add(new DataTypeRule());
-     //rules.add(new VariableNameRule());
-    rules.add(new InfiniteLoopRule());   // جديدة
-        rules.add(new EmptyIfRule());        // جديدة
+        rules.add(new InfiniteLoopRule());
+        rules.add(new EmptyIfRule());
     }
 
     public List<Warning> analyze(String fileName, String source) {

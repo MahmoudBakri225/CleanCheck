@@ -9,9 +9,9 @@ import java.util.Map;
 public class QualityScore {
 
     private static final int STARTING_SCORE = 100;
-    private static final int CRITICAL_PENALTY = 10;
-    private static final int WARNING_PENALTY = 5;
-    private static final int INFO_PENALTY = 2;
+    private static final int CRITICAL_PENALTY = 5;
+    private static final int WARNING_PENALTY = 2;
+    private static final int INFO_PENALTY = 1;
 
     public int calculate(List<Warning> warnings) {
         int score = STARTING_SCORE;

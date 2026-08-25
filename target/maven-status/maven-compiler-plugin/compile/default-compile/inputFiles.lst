@@ -1,16 +1,14 @@
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\CleanCheck.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\DataTypeRule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\DataTypeSyntaxRule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\EmptyIfRule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\EmptyMethodRule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\EncapsulationRule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\InfiniteLoopRule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\NameConventionRule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\quality\QualityScore.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\Rule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\RuleEngine.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\scanner\JavaFileScanner.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\Severity.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\TooManyParametersRule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\VariableNameRule.java
-D:\CleanCheck\src\main\java\com\mycompany\cleancheck\Warning.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\CleanCheck.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\DataTypeRule.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\EmptyIfRule.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\EmptyMethodRule.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\EncapsulationRule.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\InfiniteLoopRule.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\NameConventionRule.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\quality\QualityScore.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\Rule.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\RuleEngine.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\scanner\JavaFileScanner.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\Severity.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\TooManyParametersRule.java
+D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\Warning.java

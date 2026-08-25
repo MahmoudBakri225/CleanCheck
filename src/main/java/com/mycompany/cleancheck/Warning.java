@@ -5,7 +5,7 @@ public class Warning {
     private final String fileName;
     private final int lineNumber;
     private final String ruleName;
-    private final Severity severity;
+    private final  Severity severity;
     private final String message;
     private final String suggestion;
 
@@ -28,7 +28,7 @@ public class Warning {
 
     @Override
     public String toString() {
-        return "[" + severity + "] "
+        return "(" + severity + ") " 
                 + fileName + " : Line " + lineNumber
                 + " | " + ruleName + " | " + message
                 + "\nSuggestion: " + suggestion;
