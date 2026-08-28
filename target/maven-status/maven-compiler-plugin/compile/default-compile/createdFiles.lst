@@ -8,6 +8,7 @@ com\mycompany\cleancheck\C_CleanCheck.class
 com\mycompany\cleancheck\C_EmptyMethodRule.class
 com\mycompany\cleancheck\scanner\C_JavaFileScanner.class
 com\mycompany\cleancheck\quality\C_QualityScore.class
+com\mycompany\cleancheck\C_HtmlReportGenerator.class
 com\mycompany\cleancheck\C_Warning.class
 com\mycompany\cleancheck\C_DataTypeRule.class
 com\mycompany\cleancheck\C_EmptyIfRule.class
