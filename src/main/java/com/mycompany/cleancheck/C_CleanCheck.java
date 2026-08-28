@@ -10,6 +10,7 @@ import java.util.List;
 
 /**
  * Entry point of the CleanCheck application.
+ *
  * Scans a Java project, analyzes its files using all registered rules,
  * displays the results in the console, and generates an HTML report.
  *
@@ -27,39 +28,24 @@ public class C_CleanCheck {
 
     /**
      * Starts the CleanCheck application.
-     * Scans the project, analyzes all Java files,
-     * prints the results to the console,
-     * and generates an HTML report.
      *
      * @param args optional project path
      */
     public static void main(String[] args) {
-
-        Path projectPath = Path.of(
+        final Path projectPath = Path.of(
                 args.length > 0 ? args[0] : "test-project"
         );
 
         try {
+            final C_JavaFileScanner scanner = new C_JavaFileScanner();
+            final C_RuleEngine engine = new C_RuleEngine();
 
-            C_JavaFileScanner scanner =
-                    new C_JavaFileScanner();
+            final List<Path> javaFiles = scanner.scan(projectPath);
+            final List<C_Warning> allWarnings = new ArrayList<>();
 
-            C_RuleEngine engine =
-                    new C_RuleEngine();
-
-            List<Path> javaFiles =
-                    scanner.scan(projectPath);
-
-            List<C_Warning> allWarnings =
-                    new ArrayList<>();
-
-            printHeader(
-                    projectPath,
-                    javaFiles.size()
-            );
+            printHeader(projectPath, javaFiles.size());
 
             for (int i = 0; i < javaFiles.size(); i++) {
-
                 analyzeFile(
                         scanner,
                         engine,
@@ -69,57 +55,41 @@ public class C_CleanCheck {
                 );
             }
 
-            // Print the final report in the console
-            printReport(
-                    javaFiles.size(),
+            printReport(javaFiles.size(), allWarnings);
+
+            final List<String> fileNames = new ArrayList<>();
+
+            for (Path file : javaFiles) {
+                fileNames.add(file.getFileName().toString());
+            }
+
+            final C_HtmlReportGenerator htmlReport =
+                    new C_HtmlReportGenerator();
+
+            final String reportPath = htmlReport.generate(
+                    PROJECT_NAME,
+                    fileNames,
                     allWarnings
             );
 
-            // Get names of analyzed Java files
-            List<String> fileNames =
-                    new ArrayList<>();
-
-            for (Path file : javaFiles) {
-                fileNames.add(
-                        file.getFileName().toString()
-                );
-            }
-
-            // Generate HTML report
-            C_HtmlReportGenerator htmlReport =
-                    new C_HtmlReportGenerator();
-
-            String reportPath =
-                    htmlReport.generate(
-                            PROJECT_NAME,
-                            fileNames,
-                            allWarnings
-                    );
-
             System.out.println();
-            System.out.println(
-                    "HTML report generated: "
-                    + reportPath
-            );
+            System.out.println("HTML report generated: " + reportPath);
 
         } catch (IOException exception) {
-
             System.out.println(
                     "Unable to read project files: "
-                    + exception.getMessage()
+                            + exception.getMessage()
             );
         }
     }
 
     /**
      * Analyzes one Java file using all registered rules.
-     * Displays its warnings in the console and adds them
-     * to the global warnings list.
      *
      * @param scanner scanner used to read the Java file
      * @param engine rule engine used to analyze the file
      * @param file Java file being analyzed
-     * @param allWarnings list containing warnings from all files
+     * @param allWarnings global list of warnings
      * @param fileNumber file number used for display
      * @throws IOException if the file cannot be read
      */
@@ -128,78 +98,59 @@ public class C_CleanCheck {
             C_RuleEngine engine,
             Path file,
             List<C_Warning> allWarnings,
-            int fileNumber)
-            throws IOException {
+            int fileNumber
+    ) throws IOException {
 
-        String fileName =
-                file.getFileName().toString();
+        final String fileName = file.getFileName().toString();
 
-        List<C_Warning> warnings =
-                engine.analyze(
-                        fileName,
-                        scanner.readFile(file)
-                );
+        final List<C_Warning> warnings = engine.analyze(
+                fileName,
+                scanner.readFile(file)
+        );
 
         allWarnings.addAll(warnings);
 
         System.out.println();
         System.out.println(SECTION_LINE);
-
-        System.out.println(
-                ">> FILE "
-                + fileNumber
-                + " : "
-                + fileName
-        );
-
+        System.out.println(">> FILE " + fileNumber + " : " + fileName);
         System.out.println(
                 "Status: "
-                + (warnings.isEmpty()
+                        + (warnings.isEmpty()
                         ? "No issues found"
-                        : warnings.size()
-                        + " issue(s) found")
+                        : warnings.size() + " issue(s) found")
         );
-
         System.out.println(SECTION_LINE);
 
         for (C_Warning warning : warnings) {
-
             System.out.println(warning);
             System.out.println();
         }
     }
 
     /**
-     * Prints the application header with the project path
-     * and the number of Java files found.
+     * Prints the application header.
      *
      * @param projectPath root path of the scanned project
      * @param fileCount number of Java files found
      */
     private static void printHeader(
             Path projectPath,
-            int fileCount) {
-
+            int fileCount
+    ) {
         System.out.println(LINE);
-
         System.out.println(
                 "|                      CLEAN CHECK                             |"
         );
-
         System.out.println(
                 "|                 Java Code Quality Analyzer                   |"
         );
-
         System.out.println(LINE);
 
         System.out.println(
-                "  Project Folder : "
-                + projectPath.toAbsolutePath()
+                "  Project Folder : " + projectPath.toAbsolutePath()
         );
-
         System.out.println(
-                "  Java Files     : "
-                + fileCount
+                "  Java Files     : " + fileCount
         );
 
         System.out.println(LINE);
@@ -207,70 +158,48 @@ public class C_CleanCheck {
 
     /**
      * Calculates and prints the final quality report.
-     * Displays the score, rating, issue counts,
-     * number of files, total issues, and common problems.
      *
      * @param fileCount number of analyzed Java files
      * @param warnings all warnings detected in the project
      */
     private static void printReport(
             int fileCount,
-            List<C_Warning> warnings) {
-
-        C_QualityScore qualityScore =
-                new C_QualityScore();
-
-        int score =
-                qualityScore.calculate(warnings);
+            List<C_Warning> warnings
+    ) {
+        final C_QualityScore qualityScore = new C_QualityScore();
+        final int score = qualityScore.calculate(warnings);
 
         System.out.println();
         System.out.println(LINE);
-
         System.out.println(
                 "|                     QUALITY REPORT                            |"
         );
-
         System.out.println(LINE);
 
+        System.out.println("Quality Score : " + score + " / 100");
         System.out.println(
-                "Quality Score : "
-                + score
-                + " / 100"
-        );
-
-        System.out.println(
-                "Rating        : "
-                + qualityScore.getRating(score)
+                "Rating        : " + qualityScore.getRating(score)
         );
 
         System.out.println(SECTION_LINE);
 
         System.out.println(
                 "Critical      : "
-                + qualityScore.countCritical(warnings)
+                        + qualityScore.countCritical(warnings)
         );
-
         System.out.println(
                 "Warnings      : "
-                + qualityScore.countWarnings(warnings)
+                        + qualityScore.countWarnings(warnings)
         );
-
         System.out.println(
                 "Information   : "
-                + qualityScore.countInfo(warnings)
+                        + qualityScore.countInfo(warnings)
         );
 
         System.out.println(SECTION_LINE);
 
-        System.out.println(
-                "Files Checked : "
-                + fileCount
-        );
-
-        System.out.println(
-                "Total Issues  : "
-                + warnings.size()
-        );
+        System.out.println("Files Checked : " + fileCount);
+        System.out.println("Total Issues  : " + warnings.size());
 
         System.out.println(SECTION_LINE);
 
