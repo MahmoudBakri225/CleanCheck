@@ -1,8 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.mycompany.cleancheck;
 
 import java.util.ArrayList;
@@ -15,20 +10,20 @@ import java.util.regex.Pattern;
  * and suggests making them private with getters/setters.
  */
 public class C_EncapsulationRule implements L_Rule {
-    
+
     /**
-     * Pattern that matches field declarations which are not private.
-     * Matches fields with public or protected modifiers (or no modifier),
-     * optional static/final, common types, and an optional initializer.
+     * Pattern that matches common field declarations.
+     * Supports public/protected/no modifier, optional static/final,
+     * and allows comments after the semicolon.
      */
-    private static final Pattern NON_PRIVATE_FIELD = Pattern.compile(
-            "^(?:(public|protected)\\s+)?"
-            + "(?:static\\s+|final\\s+)*"
+    private static final Pattern FIELD_PATTERN = Pattern.compile(
+            "^(public|protected)?\\s*"
+            + "(static\\s+|final\\s+)*"
             + "(int|double|float|String|boolean|char|long|short|byte)\\s+"
-            + "[A-Za-z_$][A-Za-z0-9_$]*\\s*(=[^;]*)?;$"
+            + "[A-Za-z_$][A-Za-z0-9_$]*\\s*(=.*)?;"
     );
-    
-     /**
+
+    /**
      * Returns the name of this rule.
      *
      * @return the rule name "Encapsulation"
@@ -37,11 +32,11 @@ public class C_EncapsulationRule implements L_Rule {
     public String getName() {
         return "Encapsulation";
     }
-    
+
     /**
      * Analyzes the source code to find fields that violate encapsulation.
-     * Tracks brace depth to determine when we are inside the class body
-     * (depth == 1) and checks whether any field declared there is not private.
+     * Uses a simple flag to know when we are inside the class body
+     * and reports any non-private field declarations.
      *
      * @param fileName the name of the source file being analyzed
      * @param source   the full source code content as a string
@@ -52,41 +47,50 @@ public class C_EncapsulationRule implements L_Rule {
         List<C_Warning> warnings = new ArrayList<>();
         String[] lines = source.split("\\R");
 
-        int depth = 0;
+        boolean insideClass = false;
 
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
-            // Only check fields when we are directly inside the class body
-            if (depth == 1 && NON_PRIVATE_FIELD.matcher(line).matches()) {
+
+            // Skip empty lines and comments
+            if (line.isEmpty() || line.startsWith("//") || line.startsWith("*")) {
+                continue;
+            }
+
+            // Detect class start
+            if (line.contains("class ") && line.contains("{")) {
+                insideClass = true;
+                continue;
+            }
+
+            // Detect class end (simple check)
+            if (insideClass && line.equals("}")) {
+                insideClass = false;
+                continue;
+            }
+
+            if (!insideClass) {
+                continue;
+            }
+
+            // Skip methods and constructors
+            if (line.contains("(")) {
+                continue;
+            }
+
+            // Report non-private fields
+            if (FIELD_PATTERN.matcher(line).find() && !line.startsWith("private")) {
                 warnings.add(new C_Warning(
-                        fileName, i + 1, getName(),
+                        fileName,
+                        i + 1,
+                        getName(),
                         E_Severity.WARNING,
                         "Field should be private.",
                         "Use private access modifier and provide getters/setters."
                 ));
             }
-            
-            // Update brace depth to track nesting level
-            depth += countChar(line, '{') - countChar(line, '}');
-            if (depth < 0) depth = 0;
         }
+
         return warnings;
-    }
-    
-    /**
-     * Counts how many times a specific character appears in the given text.
-     * Used to track the number of opening and closing braces so we can
-     * determine the current nesting depth of the code.
-     *
-     * @param text   the line of code to examine
-     * @param target the character to count (usually '{' or '}')
-     * @return the number of occurrences of the target character
-     */
-    private int countChar(String text, char target) {
-        int count = 0;
-        for (char c : text.toCharArray()) {
-            if (c == target) count++;
-        }
-        return count;
     }
 }

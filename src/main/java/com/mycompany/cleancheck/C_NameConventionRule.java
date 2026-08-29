@@ -7,8 +7,9 @@ import java.util.regex.*;
  * Checks Java source code for naming convention violations.
  * - Class names should use PascalCase (start with uppercase)
  * - Variable names should use camelCase (start with lowercase)
- * - Constants (all uppercase with underscores) are allowed
+ * - Constants (all uppercase) are allowed
  * - Reserved Java keywords cannot be used as variable names
+ * - Names should not start with an underscore
  */
 public class C_NameConventionRule implements L_Rule {
 
@@ -36,7 +37,7 @@ public class C_NameConventionRule implements L_Rule {
      *
      * @return the rule name "Naming Convention"
      */
-    
+
     @Override
     public String getName() {
         return "Naming Convention";
@@ -95,8 +96,8 @@ public class C_NameConventionRule implements L_Rule {
     }
 
     /**
-     * Checks the variable name for reserved keywords and camelCase convention.
-     * Constants (all uppercase with underscores) are allowed.
+     * Checks the variable name for reserved keywords, leading underscores,
+     * and camelCase convention. Constants (all uppercase) are allowed.
      *
      * @param warnings the list to add warnings to
      * @param file     the source file name
@@ -110,6 +111,10 @@ public class C_NameConventionRule implements L_Rule {
                     "Choose a different variable name."));
         } else if (isConstant(name)) {
             // Constants are exempt from the camelCase rule.
+        } else if (name.startsWith("_")) {
+            warnings.add(new C_Warning(file, line, getName(), E_Severity.WARNING,
+                    "Variable name '" + name + "' should not start with an underscore.",
+                    "Start variable names with a lowercase letter instead of '_'."));
         } else if (Character.isUpperCase(name.charAt(0))) {
             warnings.add(new C_Warning(file, line, getName(), E_Severity.WARNING,
                     "Variable name '" + name + "' should use camelCase.",
@@ -118,13 +123,14 @@ public class C_NameConventionRule implements L_Rule {
     }
 
     /**
-     * Checks whether the given name is a constant
-     * (all characters are uppercase and contains an underscore).
+     * Checks whether the given name is a constant (all characters uppercase,
+     * e.g. "MAX" or "MAX_VALUE"). An underscore is no longer required —
+     * a single-word constant like "MAX" is valid and should not be flagged.
      *
      * @param name the name to check
      * @return true if the name is considered a constant, false otherwise
      */
     private boolean isConstant(String name) {
-        return name.equals(name.toUpperCase()) && name.contains("_");
+        return name.equals(name.toUpperCase()) && !name.equals(name.toLowerCase());
     }
 }

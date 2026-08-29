@@ -43,14 +43,14 @@ public class Employee {
         }
     }
 
-    // Infinite Loop - while(true)
+    
     public void badLoop1() {
         while (true) {
             // مفيش break
         }
     }
 
-    // Infinite Loop - for(;;)
+    
     public void badLoop2() {
         for (;;) {
             // مفيش break
@@ -61,7 +61,7 @@ public class Employee {
         return "N/A";
     }
 
-    // Method عادية (صح)
+    
     public void printInfo() {
         System.out.println("Employee: " + name);
     }
