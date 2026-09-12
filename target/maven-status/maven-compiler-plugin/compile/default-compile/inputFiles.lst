@@ -1,15 +1,15 @@
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_CleanCheck.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_DataTypeRule.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_EmptyIfRule.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_EmptyMethodRule.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_EncapsulationRule.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_HtmlReportGenerator.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_InfiniteLoopRule.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_NameConventionRule.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_RuleEngine.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_TooManyParametersRule.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_Warning.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\E_Severity.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\L_Rule.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\quality\C_QualityScore.java
-D:\Depi C\CleanCheck\src\main\java\com\mycompany\cleancheck\scanner\C_JavaFileScanner.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_CleanCheck.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_DataTypeRule.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_EmptyIfRule.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_EmptyMethodRule.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_EncapsulationRule.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_HtmlReportGenerator.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_InfiniteLoopRule.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_NameConventionRule.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_RuleEngine.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_TooManyParametersRule.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\C_Warning.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\E_Severity.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\L_Rule.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\quality\C_QualityScore.java
+D:\Depi_C\CleanCheck\src\main\java\com\mycompany\cleancheck\scanner\C_JavaFileScanner.java
