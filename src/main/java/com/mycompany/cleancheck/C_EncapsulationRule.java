@@ -20,7 +20,7 @@ public class C_EncapsulationRule implements L_Rule {
             "^(public|protected)?\\s*"
             + "(static\\s+|final\\s+)*"
             + "(int|double|float|String|boolean|char|long|short|byte)\\s+"
-            + "[A-Za-z_$][A-Za-z0-9_$]\\s(=.*)?;"
+            + "[A-Za-z_$][A-Za-z0-9_$]*\\s*(=.*)?;"
     );
 
     /**
