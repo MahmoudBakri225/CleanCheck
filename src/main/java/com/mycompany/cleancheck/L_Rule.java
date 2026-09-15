@@ -13,7 +13,7 @@ import java.util.List;
  * Each rule must provide a name and a method for analyzing Java source code
  * and returning any warnings it detects.
  *
- * @author KA
+ * 
  */
 public interface L_Rule {
 
