@@ -1,22 +1,62 @@
 # CleanCheck — Java Code Quality Analyzer
 
-> A lightweight static code analyzer for Java that catches quality issues your compiler doesn't.
+> A local Java code analyzer that helps you find quality issues, understand security risks, apply supported fixes, and track code quality over time.
 
-Your code can compile, run, and produce zero errors — and still be poorly written. Empty methods, broken encapsulation, unclear naming, methods with too many parameters, potential infinite loops... none of that stops the compiler, but all of it hurts readability and maintainability.
+Java code can compile and run without errors and still be difficult to maintain. Empty methods, unclear structure, risky exception handling, and unsafe coding patterns may not stop the compiler, but they can make a project harder to understand and review.
 
-**CleanCheck** scans your Java source files, applies a set of quality rules, and produces a detailed report: what's wrong, where exactly it is, how severe it is, and how to fix it.
+**CleanCheck** analyzes Java source code without executing the project. It reports findings with their file, line, severity, explanation, and suggested next step. For selected findings, it can apply a controlled fix, analyze the project again, and keep or roll back the change based on verification.
+
+**Analyze → Understand → Fix safely → Verify → Track**
 
 ---
 
 ## ✨ Features
 
-- **Static analysis** — inspects source code without executing it
-- **7 built-in quality rules** covering encapsulation, naming, method design, and more
-- **Severity levels** (`INFO` / `WARNING` / `CRITICAL`) for prioritizing fixes
-- **Actionable suggestions** for every detected issue, not just a warning
-- **Quality Score** (0–100) summarizing the overall health of a project
-- **HTML report generation** for a shareable, readable output
-- **Easily extensible** — add a new rule by implementing one interface
+- **Static analysis** — inspects Java source without running the analyzed project
+- **38 analysis rules** — quality, educational SOLID checks, security patterns, and duplicate code
+- **Severity levels** — `INFO`, `WARNING`, and `CRITICAL`
+- **Detailed findings** — file, line, rule, severity, message, and suggested action
+- **Quality score** — a 0–100 summary used to help prioritize work
+- **Verified fixes** — backups, re-analysis, optional compilation checks, and rollback
+- **Security Review** — preliminary findings mapped to CWE and OWASP Top 10 categories
+- **Project metrics** — identify files and rules with the largest concentration of findings
+- **Class Mode** — review and rank student projects for educational use
+- **Regression tracking** — compare scans and identify new, resolved, or changed findings
+- **Quality history** — store scan history locally
+- **Report exports** — HTML, JSON, SARIF, and CSV
+- **Command-line and CI modes** — scan a project and optionally enforce a quality gate
+- **JavaFX desktop app** — 13 pages for analysis, findings, history, and configuration guidance
+- **Local by default** — source code and scan history remain on the selected machine
+
+---
+
+## 🖥️ The CleanCheck Tool
+
+CleanCheck brings project selection, analysis, issue explanations, security findings, metrics, and fix verification into one desktop application.
+
+### Home
+
+![CleanCheck desktop application](images/home.png)
+
+### Analyze a project
+
+![Analyze page](images/analyze.png)
+
+### Review findings and source code
+
+![Issues page](images/issues.png)
+
+### Review security findings
+
+![Security Review page](images/security-review.png)
+
+### Find the most important hotspots
+
+![Metrics page](images/metrics.png)
+
+### Verify a supported fix
+
+![Fix Verification page](images/fix-verification.png)
 
 ---
 
@@ -26,210 +66,459 @@ Your code can compile, run, and produce zero errors — and still be poorly writ
 
 ```java
 public class Student {
-    String name;          // not private
-    public int age;       // public field
-    int _code;             // invalid naming
+    String name; // Field is not private
 
-    public void emptyMethod() {
-    }                       // empty method body
-
-    public void configure(String a, int b, String c,
-                           double d, String e, String f) {
-    }                       // too many parameters
+    public void doNothing() {
+    } // Empty method
 }
 ```
 
-**CleanCheck output:**
+**Example findings:**
 
-| Rule | Line | Severity | Message |
-|---|---|---|---|
-| Encapsulation | 3 | WARNING | Field should be private |
-| Naming Convention | 5 | WARNING | Variable name should not start with underscore |
-| Empty Method | 8 | INFO | Method body appears to be empty |
-| Too Many Parameters | 11 | WARNING | Method has 6 parameters |
+| Rule | Severity | Example message |
+|---|---|---|
+| Encapsulation | WARNING | Field should be private |
+| Empty Method | INFO | Method body appears to be empty |
 
-**Quality Score:** `15 / 100` → Rating: **POOR**
+The exact findings and score depend on the project, the enabled rules, and the configuration.
+
+---
+
+## 🔄 How Analysis Works
+
+CleanCheck scans source files, parses Java syntax, runs enabled rules, and combines the findings into a result that the desktop app, CLI, and report exporters can use.
+
+```text
+Choose a project
+      │
+      ▼
+Find Java source files
+      │
+      ▼
+Parse Java source into AST
+      │
+      ├──► Quality rules
+      ├──► SOLID checks
+      ├──► Security checks
+      └──► Project-wide duplicate-code check
+                    │
+                    ▼
+             Analysis results
+              ┌─────┼──────┐
+              ▼     ▼      ▼
+          Desktop  Reports  Local history
+```
+
+CleanCheck uses JavaParser to analyze Java syntax. A file that cannot be parsed is reported as a **Parse Error** finding instead of being silently treated as clean.
+
+The analyzer excludes generated and tool-managed folders such as `.git`, `target`, `build`, `out`, and `.cleancheck-backups` from project scans.
 
 ---
 
 ## 🏗️ Architecture
 
-CleanCheck is organized into four layers, each with a single responsibility:
+The project separates source discovery, analysis rules, results, fixes, storage, reports, and the user interface.
 
-```
-Java Source Files
-        │
-        ▼
- JavaFileScanner   ──►  finds and reads all .java files
-        │
-        ▼
-   RuleEngine       ──►  runs every rule against every file
-        │
-        ▼
-     Rules (×7)      ──►  each rule detects one specific issue
-        │
-        ▼
-     Warning          ──►  structured result: file, line, severity, message, suggestion
-        │
-        ▼
-QualityScore + HtmlReportGenerator ──► final score + report
-```
+![CleanCheck architecture from the project presentation](images/architecture-overview.png)
 
-### Package structure
+### Rule engine
 
-```
-com.mycompany.cleancheck
-├── C_CleanCheck.java              # entry point — orchestrates the pipeline
-├── C_RuleEngine.java              # runs all rules against scanned files
-├── L_Rule.java                    # interface every rule implements
-├── C_EncapsulationRule.java       # detects non-private fields
-├── C_EmptyMethodRule.java         # detects empty method bodies
-├── C_EmptyIfRule.java             # detects empty if-statements
-├── C_NameConventionRule.java      # detects naming convention violations
-├── C_DataTypeRule.java            # detects data type issues
-├── C_InfiniteLoopRule.java        # detects potential infinite loops
-├── C_TooManyParametersRule.java   # detects methods with excess parameters
-├── C_HtmlReportGenerator.java     # renders the HTML report
-├── scanner/
-│   └── C_JavaFileScanner.java     # discovers and reads .java files
-└── quality/
-    ├── E_Severity.java            # enum: INFO / WARNING / CRITICAL
-    └── C_QualityScore.java        # computes the final quality score
+The rule engine parses each Java file and shares its read-only AST with enabled rules. Project-wide checks, such as duplicate-code detection, run across the discovered source files.
+
+![Rule engine diagram from the project presentation](images/rule-engine.png)
+
+### Application components
+
+The same analysis pipeline is used by the desktop app and command-line entry points. Results can then be shown in the UI, saved locally, or exported.
+
+![Component architecture from the project presentation](images/component-architecture.png)
+
+### Main source folders
+
+```text
+analysis/      Findings, analysis results, and analysis models
+application/   Application orchestration, CLI, CI, Web UI, and IDE bridge
+rules/         Quality, SOLID, and security rules
+scanner/       Java source discovery and reading
+quality/       Quality score and quality-gate calculations
+risk/          File and rule risk ranking
+fix/           Controlled source edits and verification
+ui/            JavaFX pages and desktop interface
+database/      SQLite persistence and repositories
+report/        HTML, JSON, SARIF, and CSV exporters
+classmode/     Educational class and project review
+docs/          User guides, architecture, rules, and demo documentation
 ```
 
-### The `L_Rule` interface
+---
 
-Every rule implements the same contract, which keeps the engine decoupled from rule-specific logic (Open for Extension, Closed for Modification):
+## 📋 The 13 Application Pages
 
-```java
-public interface L_Rule {
-    String getName();
-    List<C_Warning> analyze(String fileName, String source);
-}
-```
-
-Adding a new rule means creating one class that implements `L_Rule` — no changes needed anywhere else in the system.
+| Page | Purpose |
+|---|---|
+| **Home** | Start a project review and return to recent projects |
+| **Dashboard** | See the score and severity summary from the latest scan |
+| **Analyze** | Select a project and start a read-only analysis |
+| **Scan Results** | Review the most recent scan summary |
+| **Issues** | Search, filter, inspect, and fix eligible findings |
+| **Security Review** | Review preliminary security findings and their CWE/OWASP mappings |
+| **Metrics** | Find risky files and rules to prioritize |
+| **Regression** | Compare the latest scan with a previous scan |
+| **Quality History** | Review saved scans over time |
+| **Class Mode** | Review and rank student projects for educational use |
+| **Fix Verification** | Understand the backup, fix, verification, and rollback process |
+| **Rules** | Read about supported analysis rules |
+| **About** | View the purpose and technical overview of CleanCheck |
 
 ---
 
 ## 🔍 Rules Reference
 
-| # | Rule | What it detects |
+CleanCheck includes **38 rules**:
+
+- **22 code-quality rules**
+- **5 educational SOLID checks**
+- **10 preliminary security rules**
+- **1 project-wide duplicate-code rule**
+
+### Code quality — 22 rules
+
+| # | Rule | What it checks |
+|---:|---|---|
+| 1 | Encapsulation | Fields that may need to be `private` |
+| 2 | Empty Method | Methods with empty bodies |
+| 3 | Empty If | Empty `if` blocks |
+| 4 | Empty While | Empty `while` blocks |
+| 5 | Infinite Loop | Loops that may not terminate |
+| 6 | Too Many Parameters | Methods with more parameters than the configured limit |
+| 7 | Naming Convention | Names that do not follow the configured conventions |
+| 8 | Data Type | Potential type issues |
+| 9 | Empty Catch | Catch blocks with no meaningful handling |
+| 10 | Magic Number | Numeric literals that may be clearer as named constants |
+| 11 | Long Method | Methods that exceed the configured length |
+| 12 | System Out | Direct console output |
+| 13 | Missing Package | Java files without a package declaration |
+| 14 | Unused Import | Imports that appear unused |
+| 15 | Unused Variable | Variables that appear unused |
+| 16 | Cyclomatic Complexity | Methods with high branching complexity |
+| 17 | Deep Nesting | Excessively nested code |
+| 18 | String Comparison | Potentially incorrect string comparisons |
+| 19 | Generic Catch | Broad exception handling |
+| 20 | Unclosed Resource | Resources that may not be closed |
+| 21 | Equals HashCode | Potential inconsistency between `equals` and `hashCode` |
+| 22 | Class Length | Classes that exceed the configured length |
+
+### SOLID checks — 5 rules
+
+- **SRP** — Single Responsibility Principle
+- **OCP** — Open/Closed Principle
+- **LSP** — Liskov Substitution Principle
+- **ISP** — Interface Segregation Principle
+- **DIP** — Dependency Inversion Principle
+
+SOLID checks are educational heuristics that can help start a design review. They are not formal verification and may require human judgment.
+
+### Security checks — 10 rules
+
+| Rule | CWE | OWASP Top 10 (2021) |
 |---|---|---|
-| 1 | **Encapsulation** | Fields that should be `private` but aren't |
-| 2 | **Empty Method** | Methods with an empty body |
-| 3 | **Empty If** | `if` statements with an empty body |
-| 4 | **Naming Convention** | Names that break `camelCase` / `PascalCase`, or use invalid characters |
-| 5 | **Data Type** | Issues or mismatches in declared types |
-| 6 | **Infinite Loop** | `while(true)` / `for(;;)` without a clear `break` |
-| 7 | **Too Many Parameters** | Methods with more than 4 parameters |
+| SQL Injection | CWE-89 | A03 Injection |
+| Hardcoded Secret | CWE-798 | A07 Identification and Authentication Failures |
+| Weak Cryptography | CWE-327 | A02 Cryptographic Failures |
+| Insecure Random | CWE-338 | A02 Cryptographic Failures |
+| Command Injection | CWE-78 | A03 Injection |
+| Path Traversal | CWE-22 | A01 Broken Access Control |
+| Unsafe Deserialization | CWE-502 | A08 Software and Data Integrity Failures |
+| Disabled Certificate Check | CWE-295 | A07 Identification and Authentication Failures |
+| Information Leak | CWE-209 | A04 Insecure Design |
+| XML External Entity (XXE) | CWE-611 | A05 Security Misconfiguration |
 
-Each detected issue is returned as a `C_Warning` object containing:
+### Project-wide duplicate-code rule
 
-```java
-fileName     // path of the affected file
-lineNumber   // exact line of the issue
-ruleName     // which rule flagged it
-severity     // INFO | WARNING | CRITICAL
-message      // human-readable description
-suggestion   // practical recommendation
-```
+The duplicate-code rule compares code across the analyzed project. Unlike per-file rules, it needs to consider multiple source files to find repeated code.
+
+---
+
+## 🚨 Severity and Quality Score
+
+Findings are assigned one of three severity levels:
+
+| Severity | Meaning |
+|---|---|
+| **CRITICAL** | A likely bug, crash, or high-impact issue that should be reviewed first |
+| **WARNING** | A design, maintenance, or security risk that needs review |
+| **INFO** | A lower-impact improvement or cleanup opportunity |
+
+The **Quality Score** summarizes the findings from a scan. It is intended as a project-specific prioritization and comparison aid, especially for before-and-after review. It is not an industry certification, a measure of security, or a guarantee of correctness.
+
+---
+
+## 🛡️ Verified Fixes
+
+A normal scan is read-only. CleanCheck changes source files only when the user explicitly applies a supported fix from the Issues page.
+
+The fix workflow is:
+
+1. Create a local backup of the file.
+2. Apply the rule-specific edit.
+3. Re-analyze the project.
+4. Check whether the finding is resolved and no worse result appeared.
+5. Run a compiler check when a JDK is available.
+6. Keep the edit if verification passes; otherwise restore the backup.
+
+![Verified fix workflow from the project presentation](images/verified-fix-workflow.png)
+
+The supported automatic-fix categories are:
+
+- Data Type
+- String Comparison
+- Encapsulation
+- Unused Variable
+- Magic Number
+- System Out
+- Naming Convention
+- Missing Package
+- Unused Import
+- Information Leak (`printStackTrace()` handling)
+
+A fix is offered only when CleanCheck considers the selected finding eligible. Many findings need a behavior or design decision, so they must be fixed manually. Review every diff and run the project’s own tests before shipping a change.
+
+---
+
+## 📈 Metrics, Regression, and History
+
+### Metrics
+
+The Metrics page ranks files and rules by their findings and risk. It helps answer questions such as:
+
+- Which file should be reviewed first?
+- Which rule contributes most to the current risk?
+- Where are findings concentrated?
+
+### Regression
+
+After a code change, run another scan to compare it with a previous scan. Regression tracking helps identify new, resolved, or changed findings.
+
+### Quality History
+
+The desktop app stores scan history in a local SQLite database. A saved scan includes project and scan information, findings, and severity counts. The application can compare scans against a saved baseline.
+
+![Local database schema from the project presentation](images/database-schema.png)
+
+CI mode is read-only and does not require the desktop database.
+
+---
+
+## 📄 Reports and Integrations
+
+CleanCheck can export analysis results in several formats:
+
+| Format | Use |
+|---|---|
+| **HTML** | Readable standalone report for sharing or review |
+| **JSON** | Structured results for scripts and integrations |
+| **SARIF** | Findings format supported by code-scanning tools |
+| **CSV** | Tabular results for spreadsheets and summaries |
+
+The desktop app can create an HTML report from the **Report** action. CLI and CI modes can export reports without opening the GUI.
+
+### Optional local Web UI
+
+The optional Web UI runs on `127.0.0.1` and provides read-only GET endpoints. It is not exposed to other computers on the local network.
+
+### IDE bridge
+
+The IDE bridge provides a local connection point for editor integrations. See [`ide/README.md`](ide/README.md) for the current setup.
 
 ---
 
 ## 🆚 Why CleanCheck?
 
-| Tool | Focus | How CleanCheck differs |
+| Tool | Main focus | CleanCheck’s role |
 |---|---|---|
-| Checkstyle | Style & formatting | Simpler explanations, beginner-friendly suggestions |
-| PMD | Broad code smell detection | Smaller, easier learning curve |
-| SpotBugs | Runtime bug detection | Clear, actionable recommendations you can act on immediately |
-| SonarQube | Enterprise dashboards / CI-CD | Lightweight, standalone, zero server setup |
+| Checkstyle | Style and formatting | Adds issue explanations and review guidance |
+| PMD | Code-quality rules | Offers a focused educational workflow |
+| SpotBugs | Potential bugs | Complements bug-focused analysis |
+| SonarQube | Broad quality and CI platform | Provides a lightweight local desktop option |
 
-CleanCheck isn't a replacement for these tools — it's a simple, fast starting point best suited for learning and small-to-medium projects.
+CleanCheck is not a replacement for these tools. It offers a local workflow for understanding findings, reviewing selected fixes, and tracking changes over time.
 
 ### CleanCheck + AI
 
-AI assistants (ChatGPT, Claude, etc.) are great for deep explanations, but on their own they have no fixed baseline: results can vary between models and between runs, and code often has to leave your machine to be reviewed. CleanCheck runs 100% locally with deterministic rules — same input, same output, every time — giving you a stable baseline you can layer AI review on top of.
+AI assistants can help explain code and explore possible solutions. CleanCheck provides repeatable rule-based checks that run locally, giving you a consistent baseline to review alongside AI suggestions.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Java 26** — core language
+- **Java 26** — application and analysis code
+- **JavaFX 26** — desktop interface
+- **JavaParser 3.28.2** — Java source and AST analysis
+- **SQLite JDBC 3.50.3.0** — local persistence
 - **Maven** — build and dependency management
-- **NetBeans** — development IDE
-- **OOP principles** — encapsulation, interfaces, polymorphism
-- **Collections & Streams** — `List`, `Map`, Java Streams
-- **NIO** — `Path` / `Files` API for file handling
-- **Regex** — pattern matching for rule detection
-- **Enums** — type-safe severity levels
+- **JUnit 5.11.4** — automated tests
 
 ---
 
 ## 🚀 Getting Started
 
+### Requirements
+
+- JDK 26
+- Maven 3.9 or later
+- Internet access for the first build to download dependencies
+- After dependencies are downloaded, the app can be run offline
+
+### Run the desktop application
+
+From the repository root:
+
 ```bash
-# clone the repository
-git clone https://github.com/<your-username>/CleanCheck.git
-cd CleanCheck
-
-# build with Maven
-mvn clean install
-
-# run against a target project
-mvn exec:java -Dexec.args="path/to/your/java/project"
+mvn clean javafx:run
 ```
 
-The tool will scan the target path for `.java` files, run all rules, print a summary to the console, and (optionally) generate an HTML report.
+### Analyze a project from the command line
+
+Replace the example path with the folder you want to analyze:
+
+```bash
+mvn exec:java "-Dexec.mainClass=com.mycompany.cleancheck.application.CleanCheck" "-Dexec.args=C:/path/to/your-project --analyze-only"
+```
+
+### Export reports from the command line
+
+```bash
+mvn exec:java "-Dexec.mainClass=com.mycompany.cleancheck.application.CiRunner" "-Dexec.args=C:/path/to/your-project --html report.html --json report.json --sarif report.sarif --csv report.csv"
+```
+
+### Run a CI quality gate
+
+```bash
+mvn exec:java "-Dexec.mainClass=com.mycompany.cleancheck.application.CiRunner" "-Dexec.args=C:/path/to/your-project --json report.json --min-score 70 --fail-on-critical"
+```
+
+The CI runner returns:
+
+| Exit code | Meaning |
+|---:|---|
+| `0` | Quality gate passed |
+| `1` | Quality gate failed |
+| `2` | Usage or I/O error |
+
+`--min-score` sets the minimum score for the gate. `--fail-on-critical` makes the gate fail when critical findings exist.
+
+### Build and run a JAR
+
+```bash
+mvn package
+java -jar target/cleancheck.jar
+```
+
+The runnable JAR supports the GUI and command-line modes. By default, the package includes JavaFX native libraries for the build operating system. The `all-platforms` Maven profile can be used for a cross-platform package.
+
+### Run tests
+
+```bash
+mvn test
+```
 
 ---
 
-## 📈 Roadmap
+## ⚙️ Configuration
 
-- [ ] More quality rules
-- [ ] SOLID principle violation detection
-- [ ] Improved, more visual HTML report
-- [ ] Full JUnit test coverage
-- [ ] Persist analysis results to a SQL database
-- [ ] Analysis history to track code quality over time
-- [ ] Quality dashboard with visual insights
-- [ ] CI/CD pipeline integration
+CleanCheck loads `cleancheck.properties` from the root of the project being analyzed. To customize a project, copy [`cleancheck.properties.example`](cleancheck.properties.example) into that project as `cleancheck.properties`.
+
+Configuration can be used to:
+
+- Enable or disable rules
+- Set method-length and parameter-count thresholds
+- Set complexity, nesting, class-length, and duplicate-code thresholds
+- Override the severity of a rule
+- Exclude generated or otherwise irrelevant paths
+
+Example:
+
+```properties
+rules.disabled = Magic Number, System Out
+
+method.maxLines = 40
+method.maxParameters = 4
+method.maxComplexity = 10
+nesting.maxDepth = 4
+class.maxLines = 500
+duplicate.minStatements = 5
+
+severity.Magic_Number = INFO
+severity.Generic_Catch = CRITICAL
+
+exclude = **/generated/**
+```
+
+To suppress an individual finding, use a comment on the finding line or the line above:
+
+```java
+int timeout = 30; // cleancheck:ignore Magic Number
+```
+
+To suppress a rule on the following line:
+
+```java
+// cleancheck:ignore
+int timeout = 30;
+```
+
+To suppress a file:
+
+```java
+// cleancheck:ignore-file
+```
 
 ---
 
-## 🧩 Object-Oriented Design
+## 🗃️ Data and Privacy
 
-CleanCheck is also a practical showcase of core OOP concepts:
+- Project source is analyzed locally by the desktop app and CLI.
+- Scan history is stored locally in SQLite by default at `database/cleancheck.db`.
+- Backups for verified fixes are stored locally under `.cleancheck-backups`.
+- The optional local Web UI binds to loopback (`127.0.0.1`).
+- Report files are written only when you choose an export location.
+- The first Maven build may need internet access to download dependencies.
 
-- **Classes & Objects** — `Warning`, `RuleEngine`, `QualityScore`
-- **Encapsulation** — private fields in the `Warning` model
-- **Abstraction** — `L_Rule` hides each rule's internal logic
-- **Interface** — a fixed contract shared by every rule
-- **Polymorphism** — `analyze()` behaves differently per rule
-- **Method Overriding** — each rule provides its own `analyze()` implementation
-- **Enums** — type-safe severity levels
-- **Single Responsibility Principle** — every class has one clear job
+You can use the JVM property `cleancheck.database.path` to select a different SQLite database file. You can use `cleancheck.config` to select an explicit configuration file.
 
 ---
 
-## 👥 Team — Code Titans
+## ⚠️ Security and Analysis Limitations
 
-| Name | Role |
-|---|---|
-| Mahmoud Bakri | Team Leader |
-| Nashwa Nassar | Developer |
-| Ahmed Ramzy | Developer |
-| Manar Galal | Developer |
+CleanCheck is a developer aid. It is not a replacement for a security audit, threat model, dependency scanner, compiler, or test suite.
 
-Built as part of the **Java OOP Course**, under the supervision of **Dr. Mina Younan**, within **Digital Egypt Pioneers Initiative (DEPI) — Round 5**.
-
----
-
-## 📄 License
-
-This project was developed for educational purposes as part of the DEPI program. Add a license of your choice (e.g. MIT) before making the repository public, if needed.
+- Security rules use AST and pattern-based checks and analyze one file at a time.
+- A finding may be a false positive.
+- A clean result can miss vulnerabilities, especially when data flow spans methods or classes.
+- CleanCheck does not check third-party dependency versions for known vulnerabilities.
+- SOLID results are design heuristics, not formal verification.
+- A quality score helps prioritize work; it does not prove correctness or security.
+- Review proposed changes, inspect the diff, and run your own tests before releasing software.
 
 ---
 
-> Don't just make your code work. Make your code clean.
+
+## 🤝 Contributing
+
+Issues and pull requests are welcome.
+
+When changing the analyzer:
+
+- Add or update focused tests for rule behavior.
+- Update documentation when a rule or workflow changes.
+- Keep normal analysis read-only.
+- Preserve the verified-fix safety sequence: backup → apply → re-analyze → compile check when available → keep or roll back.
+- Run `mvn test` before submitting when your environment supports the required JDK and dependencies.
+
+---
+
+
+
+---
+
+> Don’t just make your code work. Make it easier to understand, safer to change, and simpler to review.
