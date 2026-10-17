@@ -7,24 +7,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Detects incorrect data type capitalization and potential misuse of numeric types.
- * Checks for:
- * - Primitive types written with wrong case (e.g. Int, BOOLEAN)
- * - "string" written in lowercase instead of "String"
- * - Usage of float (suggests double for better precision)
- * - Usage of double for money-related variables (suggests BigDecimal)
+ * Detects incorrect data type capitalization and potential misuse of numeric
+ * types. Checks for: - Primitive types written with wrong case (e.g. Int,
+ * BOOLEAN) - "string" written in lowercase instead of "String" - Usage of float
+ * (suggests double for better precision) - Usage of double for money-related
+ * variables (suggests BigDecimal)
  *
- * Severity notes:
- * - "int" and "char" have no matching wrapper class of that exact
- *   miscapitalized name ("Int" / "Char" do not exist in java.lang —
- *   the real wrappers are "Integer" / "Character"), so miscapitalizing
- *   them is a compile-breaking error -> CRITICAL.
- * - "boolean", "double", "float", "long", "short", "byte" DO have a
- *   real wrapper class with that capitalized name ("Boolean", "Double",
- *   etc.), so writing them capitalized still compiles (just uses
- *   unnecessary autoboxing) -> WARNING (style issue only).
- * - "string" (lowercase) is never a valid type in Java (case-sensitive,
- *   no such class) -> CRITICAL.
+ * Severity notes: - "int" and "char" have no matching wrapper class of that
+ * exact miscapitalized name ("Int" / "Char" do not exist in java.lang — the
+ * real wrappers are "Integer" / "Character"), so miscapitalizing them is a
+ * compile-breaking error -> CRITICAL. - "boolean", "double", "float", "long",
+ * "short", "byte" DO have a real wrapper class with that capitalized name
+ * ("Boolean", "Double", etc.), so writing them capitalized still compiles (just
+ * uses unnecessary autoboxing) -> WARNING (style issue only). - "string"
+ * (lowercase) is never a valid type in Java (case-sensitive, no such class) ->
+ * CRITICAL.
  *
  * @author KA
  */
@@ -45,13 +42,13 @@ public class C_DataTypeRule implements L_Rule {
     }
 
     /**
-     * Analyzes the source code line by line looking for data type issues.
-     * Uses regex to detect variable declarations and applies several checks:
-     * wrong capitalization of primitives, incorrect "String", float usage,
-     * and double used for financial values.
+     * Analyzes the source code line by line looking for data type issues. Uses
+     * regex to detect variable declarations and applies several checks: wrong
+     * capitalization of primitives, incorrect "String", float usage, and double
+     * used for financial values.
      *
      * @param fileName the name of the source file being analyzed
-     * @param source   the full source code content as a string
+     * @param source the full source code content as a string
      * @return a list of warnings for data type problems found
      */
     @Override
@@ -78,13 +75,22 @@ public class C_DataTypeRule implements L_Rule {
                     if (written.equalsIgnoreCase(correct) && !written.equals(correct)) {
                         boolean breaksCompilation = NON_EXISTENT_WHEN_MISCASED.contains(correct);
 
+                        String message;
+                        String suggestion;
+
+                        if (breaksCompilation) {
+                            message = "Data type '" + written + "' does not exist in Java and will not compile.";
+                            suggestion = "Use '" + correct + "' with the correct capitalization.";
+                        } else {
+                            message = "Data type '" + written + "' uses wrapper class capitalization (unnecessary boxing).";
+                            suggestion = "Prefer primitive '" + correct + "' unless you specifically need the wrapper.";
+                        }
+
                         warnings.add(new C_Warning(
                                 fileName, i + 1, getName(),
                                 breaksCompilation ? E_Severity.CRITICAL : E_Severity.WARNING,
-                                breaksCompilation
-                                        ? "Data type '" + written + "' does not exist in Java and will not compile."
-                                        : "Data type '" + written + "' is incorrectly formatted.",
-                                "Use '" + correct + "' with the correct capitalization."
+                                message,
+                                suggestion
                         ));
                     }
                 }

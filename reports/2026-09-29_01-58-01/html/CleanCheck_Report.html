@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>CleanCheck - CleanCheck Report</title><style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f8;
+    color: #222;
+}
+
+.container {
+    width: 92%;
+    max-width: 1400px;
+    margin: 30px auto;
+}
+
+.header {
+    background: #1f2937;
+    color: white;
+    padding: 35px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 36px;
+}
+
+.header p {
+    margin-top: 8px;
+    color: #d1d5db;
+}
+
+.project-name {
+    margin-top: 18px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 12px;
+    box-shadow:
+        0 2px 8px rgba(0,0,0,0.08);
+}
+
+.card h2 {
+    margin-top: 0;
+    color: #1f2937;
+}
+
+.subtitle {
+    color: #6b7280;
+    margin-top: -8px;
+    margin-bottom: 20px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.summary-box {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+}
+
+.summary-title {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+
+.summary-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: #111827;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th {
+    background: #1f2937;
+    color: white;
+    text-align: left;
+    padding: 12px;
+}
+
+td {
+    padding: 11px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+}
+
+tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+tr:hover {
+    background: #f3f4f6;
+}
+
+.severity {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.severity.critical {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.severity.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.severity.info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.score-change {
+    margin-top: 15px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.success {
+    padding: 15px;
+    background: #dcfce7;
+    color: #166534;
+    border-radius: 8px;
+}
+
+.error {
+    padding: 15px;
+    background: #fee2e2;
+    color: #991b1b;
+    border-radius: 8px;
+}
+
+footer {
+    text-align: center;
+    color: #6b7280;
+    padding: 30px;
+}
+
+@media (max-width: 800px) {
+
+    .container {
+        width: 96%;
+    }
+
+    .card {
+        padding: 15px;
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 750px;
+    }
+
+    .header h1 {
+        font-size: 28px;
+    }
+}
+
+</style>
+</head><body><div class='container'><div class='header'><h1>CleanCheck</h1><p>Java Code Quality Analyzer</p><div class='project-name'>CleanCheck</div></div><section class='card'><h2>Project Summary</h2><div class='summary-grid'><div class='summary-box'><div class='summary-title'>Java Files</div><div class='summary-value'>2</div></div><div class='summary-box'><div class='summary-title'>Initial Issues</div><div class='summary-value'>23</div></div><div class='summary-box'><div class='summary-title'>Final Issues</div><div class='summary-value'>23</div></div><div class='summary-box'><div class='summary-title'>Final Score</div><div class='summary-value'>47 / 100</div></div></div></section><section class='card'><h2>Quality Evolution</h2><table><tr><th>Stage</th><th>Score</th><th>Issues</th></tr><tr><td>Baseline</td><td>49 / 100</td><td>-</td></tr><tr><td>Initial</td><td>47 / 100</td><td>23</td></tr><tr><td>Final</td><td>47 / 100</td><td>23</td></tr></table><div class='score-change'><strong>Initial → Final Score Change:</strong> 0</div><div class='score-change'><strong>Baseline → Initial Score Change:</strong> -2</div></section><section class='card'><h2>Regression Analysis</h2><p class='subtitle'>Baseline → Initial</p><div class='summary-grid'><div class='summary-box'><div class='summary-title'>New Issues</div><div class='summary-value'>1</div></div><div class='summary-box'><div class='summary-title'>Resolved Issues</div><div class='summary-value'>0</div></div><div class='summary-box'><div class='summary-title'>Unchanged Issues</div><div class='summary-value'>22</div></div></div><table><tr><th>Metric</th><th>Value</th></tr><tr><td>New Issues</td><td>1</td></tr><tr><td>Resolved Issues</td><td>0</td></tr><tr><td>Unchanged Issues</td><td>22</td></tr></table></section><section class='card'><h2>Fix Verification</h2><p class='subtitle'>Initial → Final</p><table><tr><th>Metric</th><th>Value</th></tr><tr><td>New Issues</td><td>0</td></tr><tr><td>Resolved Issues</td><td>0</td></tr><tr><td>Unchanged Issues</td><td>23</td></tr></table></section><section class='card'><h2>Risk Hotspots</h2><p class='subtitle'>Calculated from the Initial Scan</p><div class='summary-grid'><div class='summary-box'><div class='summary-title'>Total Initial Issues</div><div class='summary-value'>23</div></div><div class='summary-box'><div class='summary-title'>Files With Issues</div><div class='summary-value'>2</div></div><div class='summary-box'><div class='summary-title'>Rules Triggered</div><div class='summary-value'>6</div></div></div></section><section class='card'><h2>File Hotspots</h2><p class='subtitle'>Files with the highest calculated risk</p><table><tr><th>File</th><th>Issues</th><th>Risk Score</th></tr><tr><td>Student.java</td><td>16</td><td>50</td></tr><tr><td>Employee.java</td><td>7</td><td>17</td></tr></table></section><section class='card'><h2>Rule Hotspots</h2><p class='subtitle'>Rules contributing the highest risk</p><table><tr><th>Rule</th><th>Issues</th><th>Risk Score</th></tr><tr><td>Data Type</td><td>11</td><td>33</td></tr><tr><td>Naming Convention</td><td>4</td><td>12</td></tr><tr><td>Infinite Loop</td><td>2</td><td>10</td></tr><tr><td>Too Many Parameters</td><td>2</td><td>6</td></tr><tr><td>Empty Method</td><td>3</td><td>3</td></tr><tr><td>Empty If</td><td>1</td><td>3</td></tr></table></section><section class='card'><h2>Detected Issues</h2><table><tr><th>File</th><th>Line</th><th>Rule</th><th>Severity</th><th>Message</th><th>Suggestion</th></tr><tr><td>Employee.java</td><td>20</td><td>Empty Method</td><td><span class='severity info'>INFO</span></td><td>Empty method or constructor body detected.</td><td>Implement the method or remove it if it is not needed.</td></tr><tr><td>Employee.java</td><td>21</td><td>Too Many Parameters</td><td><span class='severity warning'>WARNING</span></td><td>Method &#39;configure&#39; has 6 parameters.</td><td>Consider grouping related parameters into a class.</td></tr><tr><td>Employee.java</td><td>6</td><td>Data Type</td><td><span class='severity warning'>WARNING</span></td><td>Double is used for a money-related value.</td><td>Consider using BigDecimal for financial calculations.</td></tr><tr><td>Employee.java</td><td>12</td><td>Data Type</td><td><span class='severity info'>INFO</span></td><td>Float data type is being used.</td><td>Consider using double when higher precision is required.</td></tr><tr><td>Employee.java</td><td>13</td><td>Data Type</td><td><span class='severity warning'>WARNING</span></td><td>Double is used for a money-related value.</td><td>Consider using BigDecimal for financial calculations.</td></tr><tr><td>Employee.java</td><td>15</td><td>Data Type</td><td><span class='severity warning'>WARNING</span></td><td>Data type &#39;Double&#39; uses wrapper class capitalization (unnecessary boxing).</td><td>Prefer primitive &#39;double&#39; unless you specifically need the wrapper.</td></tr><tr><td>Employee.java</td><td>27</td><td>Data Type</td><td><span class='severity warning'>WARNING</span></td><td>Double is used for a money-related value.</td><td>Consider using BigDecimal for financial calculations.</td></tr><tr><td>Student.java</td><td>30</td><td>Empty Method</td><td><span class='severity info'>INFO</span></td><td>Empty method or constructor body detected.</td><td>Implement the method or remove it if it is not needed.</td></tr><tr><td>Student.java</td><td>55</td><td>Empty Method</td><td><span class='severity info'>INFO</span></td><td>Empty method or constructor body detected.</td><td>Implement the method or remove it if it is not needed.</td></tr><tr><td>Student.java</td><td>41</td><td>Too Many Parameters</td><td><span class='severity warning'>WARNING</span></td><td>Method &#39;setData&#39; has 6 parameters.</td><td>Consider grouping related parameters into a class.</td></tr><tr><td>Student.java</td><td>14</td><td>Naming Convention</td><td><span class='severity warning'>WARNING</span></td><td>Variable name &#39;Score&#39; should use camelCase.</td><td>Start variable names with a lowercase letter.</td></tr><tr><td>Student.java</td><td>15</td><td>Naming Convention</td><td><span class='severity warning'>WARNING</span></td><td>Variable name &#39;Price&#39; should use camelCase.</td><td>Start variable names with a lowercase letter.</td></tr><tr><td>Student.java</td><td>20</td><td>Naming Convention</td><td><span class='severity warning'>WARNING</span></td><td>Variable name &#39;RegressionTest&#39; should use camelCase.</td><td>Start variable names with a lowercase letter.</td></tr><tr><td>Student.java</td><td>37</td><td>Naming Convention</td><td><span class='severity warning'>WARNING</span></td><td>Variable name &#39;MyName&#39; should use camelCase.</td><td>Start variable names with a lowercase letter.</td></tr><tr><td>Student.java</td><td>17</td><td>Data Type</td><td><span class='severity warning'>WARNING</span></td><td>Double is used for a money-related value.</td><td>Consider using BigDecimal for financial calculations.</td></tr><tr><td>Student.java</td><td>18</td><td>Data Type</td><td><span class='severity warning'>WARNING</span></td><td>Double is used for a money-related value.</td><td>Consider using BigDecimal for financial calculations.</td></tr><tr><td>Student.java</td><td>19</td><td>Data Type</td><td><span class='severity info'>INFO</span></td><td>Float data type is being used.</td><td>Consider using double when higher precision is required.</td></tr><tr><td>Student.java</td><td>22</td><td>Data Type</td><td><span class='severity critical'>CRITICAL</span></td><td>Data type &#39;Int&#39; does not exist in Java and will not compile.</td><td>Use &#39;int&#39; with the correct capitalization.</td></tr><tr><td>Student.java</td><td>23</td><td>Data Type</td><td><span class='severity warning'>WARNING</span></td><td>Data type &#39;Boolean&#39; uses wrapper class capitalization (unnecessary boxing).</td><td>Prefer primitive &#39;boolean&#39; unless you specifically need the wrapper.</td></tr><tr><td>Student.java</td><td>24</td><td>Data Type</td><td><span class='severity critical'>CRITICAL</span></td><td>Data type &#39;string&#39; does not exist in Java (Java is case-sensitive).</td><td>Use &#39;String&#39; with a capital S.</td></tr><tr><td>Student.java</td><td>64</td><td>Infinite Loop</td><td><span class='severity critical'>CRITICAL</span></td><td>Possible infinite loop detected (while(true)).</td><td>Make sure there is a break condition inside the loop.</td></tr><tr><td>Student.java</td><td>69</td><td>Infinite Loop</td><td><span class='severity critical'>CRITICAL</span></td><td>Possible infinite loop detected (for(;;)).</td><td>Make sure there is a break condition inside the loop.</td></tr><tr><td>Student.java</td><td>59</td><td>Empty If</td><td><span class='severity warning'>WARNING</span></td><td>Empty if statement detected.</td><td>Remove the empty if or add the missing logic.</td></tr></table></section><section class='card'><h2>Quality Evolution History</h2><p class='subtitle'>Historical scans stored in SQLite</p><table><tr><th>Scan ID</th><th>Date</th><th>Score</th><th>Total</th><th>Critical</th><th>Warning</th><th>Info</th></tr><tr><td>10</td><td>2026-09-24 21:39:48</td><td>45 / 100</td><td>24</td><td>4</td><td>15</td><td>5</td></tr><tr><td>11</td><td>2026-09-24 21:42:36</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>12</td><td>2026-09-24 21:45:06</td><td>46 / 100</td><td>24</td><td>4</td><td>14</td><td>6</td></tr><tr><td>13</td><td>2026-09-24 21:48:10</td><td>46 / 100</td><td>24</td><td>4</td><td>14</td><td>6</td></tr><tr><td>14</td><td>2026-09-24 21:49:52</td><td>45 / 100</td><td>25</td><td>4</td><td>14</td><td>7</td></tr><tr><td>15</td><td>2026-09-24 21:53:31</td><td>46 / 100</td><td>24</td><td>4</td><td>14</td><td>6</td></tr><tr><td>16</td><td>2026-09-24 21:56:49</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>17</td><td>2026-09-24 22:03:49</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>18</td><td>2026-09-24 22:07:54</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>19</td><td>2026-09-24 22:09:05</td><td>50 / 100</td><td>21</td><td>4</td><td>13</td><td>4</td></tr><tr><td>20</td><td>2026-09-24 22:10:22</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>21</td><td>2026-09-29 04:25:36</td><td>47 / 100</td><td>22</td><td>4</td><td>15</td><td>3</td></tr><tr><td>22</td><td>2026-09-29 04:30:51</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>23</td><td>2026-09-29 04:41:20</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>24</td><td>2026-09-29 04:44:34</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>25</td><td>2026-09-29 04:44:37</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>26</td><td>2026-09-29 04:46:16</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>27</td><td>2026-09-29 04:46:20</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>28</td><td>2026-09-29 04:48:51</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>29</td><td>2026-09-29 04:48:55</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>30</td><td>2026-09-29 04:51:24</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>31</td><td>2026-09-29 04:51:27</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>32</td><td>2026-09-29 04:54:19</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>33</td><td>2026-09-29 04:54:22</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>34</td><td>2026-09-29 04:57:28</td><td>43 / 100</td><td>25</td><td>4</td><td>16</td><td>5</td></tr><tr><td>35</td><td>2026-09-29 04:57:32</td><td>43 / 100</td><td>25</td><td>4</td><td>16</td><td>5</td></tr><tr><td>36</td><td>2026-09-29 05:01:03</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>37</td><td>2026-09-29 05:01:06</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>38</td><td>2026-09-29 05:04:28</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>39</td><td>2026-09-29 05:04:31</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>40</td><td>2026-09-29 05:07:35</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>41</td><td>2026-09-29 05:07:38</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>42</td><td>2026-09-29 05:11:25</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>43</td><td>2026-09-29 05:11:28</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>44</td><td>2026-09-29 05:14:07</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>45</td><td>2026-09-29 05:14:11</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>46</td><td>2026-09-29 05:20:33</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>47</td><td>2026-09-29 05:20:36</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>48</td><td>2026-09-29 05:39:39</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>49</td><td>2026-09-29 05:39:43</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>50</td><td>2026-09-29 05:45:28</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>51</td><td>2026-09-29 05:45:31</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>52</td><td>2026-09-29 05:52:26</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>53</td><td>2026-09-29 05:52:29</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>54</td><td>2026-09-29 05:58:39</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>55</td><td>2026-09-29 05:58:42</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>56</td><td>2026-09-29 06:28:40</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>57</td><td>2026-09-29 06:28:43</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>58</td><td>2026-09-29 06:47:34</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>59</td><td>2026-09-29 06:47:37</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>60</td><td>2026-09-29 06:51:43</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>61</td><td>2026-09-29 06:51:46</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>62</td><td>2026-09-29 06:56:33</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>63</td><td>2026-09-29 06:56:36</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>64</td><td>2026-09-29 06:57:52</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>65</td><td>2026-09-29 06:57:55</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>66</td><td>2026-09-29 06:59:33</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>67</td><td>2026-09-29 06:59:37</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>68</td><td>2026-09-29 07:10:10</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>69</td><td>2026-09-29 07:10:14</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>70</td><td>2026-09-29 07:13:06</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>71</td><td>2026-09-29 07:13:09</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>72</td><td>2026-09-29 07:28:42</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>73</td><td>2026-09-29 07:28:45</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>74</td><td>2026-09-29 07:34:00</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>75</td><td>2026-09-29 07:34:04</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>76</td><td>2026-09-29 07:37:34</td><td>42 / 100</td><td>24</td><td>5</td><td>14</td><td>5</td></tr><tr><td>77</td><td>2026-09-29 07:37:38</td><td>42 / 100</td><td>24</td><td>5</td><td>14</td><td>5</td></tr><tr><td>78</td><td>2026-09-29 07:38:58</td><td>42 / 100</td><td>24</td><td>5</td><td>14</td><td>5</td></tr><tr><td>79</td><td>2026-09-29 07:39:01</td><td>42 / 100</td><td>24</td><td>5</td><td>14</td><td>5</td></tr><tr><td>80</td><td>2026-09-29 07:39:57</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>81</td><td>2026-09-29 07:40:01</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>82</td><td>2026-09-29 07:43:16</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>83</td><td>2026-09-29 07:43:20</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>84</td><td>2026-09-29 07:53:06</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>85</td><td>2026-09-29 07:53:10</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>86</td><td>2026-09-29 07:56:52</td><td>52 / 100</td><td>22</td><td>4</td><td>10</td><td>8</td></tr><tr><td>87</td><td>2026-09-29 07:56:55</td><td>52 / 100</td><td>22</td><td>4</td><td>10</td><td>8</td></tr><tr><td>88</td><td>2026-09-29 08:01:49</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>89</td><td>2026-09-29 08:01:52</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>90</td><td>2026-09-29 08:04:27</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>91</td><td>2026-09-29 08:04:31</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>92</td><td>2026-09-29 08:07:44</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>93</td><td>2026-09-29 08:07:47</td><td>49 / 100</td><td>22</td><td>4</td><td>13</td><td>5</td></tr><tr><td>94</td><td>2026-09-29 08:09:30</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>95</td><td>2026-09-29 08:09:34</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>96</td><td>2026-09-29 08:11:54</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>97</td><td>2026-09-29 08:11:58</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>98</td><td>2026-09-29 08:16:45</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>99</td><td>2026-09-29 08:16:49</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>100</td><td>2026-09-29 08:30:20</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>101</td><td>2026-09-29 08:30:24</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>102</td><td>2026-09-29 08:57:54</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr><tr><td>103</td><td>2026-09-29 08:57:58</td><td>47 / 100</td><td>23</td><td>4</td><td>14</td><td>5</td></tr></table></section><footer><p>Generated by CleanCheck</p><p>Java Code Quality Analyzer</p></footer></div></body></html>
