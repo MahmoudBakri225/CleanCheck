@@ -531,10 +531,4 @@ When changing the analyzer:
 
 ---
 
-## 📄 License
-
-CleanCheck is distributed under the [MIT License](LICENSE).
-
----
-
 > Don’t just make your code work. Make it easier to understand, safer to change, and simpler to review.
