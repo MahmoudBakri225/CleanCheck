@@ -1,0 +1,30 @@
+# Copy to cleancheck.properties (project root) to customise CleanCheck. Every key is optional.
+
+# 1) Turn rules off. Comma-separated rule names, case-insensitive; applies everywhere (CLI, GUI, CI).
+# Rules: Encapsulation, Empty Method, Empty If, Empty While, Infinite Loop, Too Many Parameters,
+#        Naming Convention, Data Type, Empty Catch, Magic Number, Long Method, System Out, Missing Package,
+#        Unused Import, Unused Variable, Cyclomatic Complexity, Deep Nesting, String Comparison,
+#        Generic Catch, Unclosed Resource, Equals HashCode, Class Length, Duplicate Code, Parse Error
+# Security rules: SQL Injection, Hardcoded Secret, Weak Cryptography, Insecure Random, Command Injection,
+#        Path Traversal, Unsafe Deserialization, Disabled Certificate Check, Information Leak, XML External Entity
+rules.disabled = Magic Number, System Out
+
+# 2) Thresholds (defaults shown)
+method.maxLines = 40
+method.maxParameters = 4
+method.maxComplexity = 10
+nesting.maxDepth = 4
+class.maxLines = 500
+duplicate.minStatements = 5
+
+# 3) Change a rule's severity: severity.<Rule_Name> = CRITICAL | WARNING | INFO
+severity.Magic_Number = INFO
+severity.Generic_Catch = CRITICAL
+
+# 4) Do not analyze these files (glob, relative to the analyzed project, comma-separated)
+exclude = **/generated/**
+
+# 5) In source code, silence one line (or the next line) with a comment:
+#      int timeout = 30; // cleancheck:ignore Magic Number
+#      // cleancheck:ignore
+#    and a whole file with:  // cleancheck:ignore-file

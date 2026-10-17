@@ -1,0 +1,8 @@
+target/
+reports/
+database/*.db
+*.class
+/work/
+.idea/
+.nb-gradle/
+.DS_Store

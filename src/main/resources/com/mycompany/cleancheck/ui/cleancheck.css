@@ -1,0 +1,116 @@
+/* CleanCheck — polished Figma-like theme */
+
+.root {
+    -fx-font-family: "Segoe UI", "Inter", "System";
+    -fx-font-size: 13px;
+}
+
+.label { -fx-text-fill: -cc-text; }
+
+.button {
+    -fx-cursor: hand;
+    -fx-background-insets: 0;
+}
+.button:hover { -fx-opacity: 0.92; }
+.button:pressed { -fx-opacity: 0.86; }
+.button:disabled { -fx-opacity: 0.4; }
+
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -cc-border transparent;
+}
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-size: 44;
+    -fx-border-color: transparent;
+}
+.table-view .column-header .label {
+    -fx-text-fill: -cc-muted;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+.table-row-cell {
+    -fx-cell-size: 46;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -cc-border transparent;
+    -fx-table-cell-border-color: transparent;
+}
+.table-row-cell:odd { -fx-background-color: rgba(37,99,235,0.03); }
+.table-row-cell:hover { -fx-background-color: rgba(37,99,235,0.08); }
+.table-row-cell:selected { -fx-background-color: rgba(37,99,235,0.18); }
+.table-cell {
+    -fx-alignment: CENTER-LEFT;
+    -fx-padding: 0 14 0 14;
+    -fx-text-fill: -cc-text;
+    -fx-font-size: 13px;
+}
+.table-row-cell:selected .table-cell {
+    -fx-text-fill: -cc-primary;
+    -fx-font-weight: bold;
+}
+
+.scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.scroll-bar { -fx-background-color: transparent; -fx-pref-width: 8; }
+.scroll-bar .thumb {
+    -fx-background-color: #CBD5E1;
+    -fx-background-radius: 8;
+}
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-padding: 0; -fx-background-color: transparent;
+}
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow {
+    -fx-shape: " "; -fx-padding: 0;
+}
+
+.progress-indicator { -fx-progress-color: #2563EB; }
+.progress-indicator .percentage { -fx-fill: transparent; }
+.progress-bar .track {
+    -fx-background-color: -cc-border;
+    -fx-background-radius: 8;
+}
+.progress-bar .bar {
+    -fx-background-radius: 8;
+    -fx-background-insets: 0;
+}
+
+.text-field, .combo-box-base, .text-area {
+    -fx-background-color: -cc-card;
+    -fx-text-fill: -cc-text;
+    -fx-background-radius: 12;
+    -fx-border-color: -cc-border;
+    -fx-border-radius: 12;
+    -fx-padding: 8 12 8 12;
+}
+.text-field:focused, .combo-box-base:focused {
+    -fx-border-color: #2563EB;
+    -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.15), 10, 0, 0, 0);
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: -cc-card;
+    -fx-background-radius: 12;
+    -fx-border-color: -cc-border;
+}
+.combo-box-popup .list-cell { -fx-background-color: transparent; -fx-text-fill: -cc-text; }
+.combo-box-popup .list-cell:hover { -fx-background-color: -cc-primary-soft; }
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: #2563EB;
+    -fx-text-fill: white;
+}
+
+/* empty table state and table text follow the theme */
+.table-view .placeholder .label { -fx-text-fill: -cc-muted; }
+.table-view .column-header .label { -fx-alignment: CENTER-LEFT; }
+.combo-box-base .arrow-button { -fx-background-color: transparent; }
+.combo-box-base .arrow { -fx-background-color: -cc-muted; }
+.combo-box-base .list-cell { -fx-text-fill: -cc-text; -fx-background-color: transparent; }
