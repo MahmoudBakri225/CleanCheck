@@ -1,24 +1,5 @@
 # CleanCheck — Java Code Quality Analyzer
 
-> **Submission package facts:** default **JDK 21 / JavaFX 21**; **no unit-test tree** in this archive; **155** production Java sources; security rules split into classes; AST-first fixes via `AstFixSupport`.  
-> Full truth sheet: [PROJECT_TRUTH.md](PROJECT_TRUTH.md)
-
----
-
-> Java 21 default · AST fixes · split security rules · no tests · see DELIVERY.md
-
-# CleanCheck — Java Code Quality Analyzer
-
-> **All review improvements applied**\n> • Security rules split · AST fixes for key rules · PageNavigator · AppServices DI · `-Pjava21` profile  
-> • Security rules split into separate classes  
-> • Source discovery separated from analysis  
-> • Stronger rule abstraction + technical-debt estimate  
-> • All tests removed  
-> • See [IMPROVEMENTS.md](IMPROVEMENTS.md)
-
----
-
-
 > A local Java code analyzer that helps you find quality issues, understand security risks, apply supported fixes, and track code quality over time.
 
 Java code can compile and run without errors and still be difficult to maintain. Empty methods, unclear structure, risky exception handling, and unsafe coding patterns may not stop the compiler, but they can make a project harder to understand and review.
