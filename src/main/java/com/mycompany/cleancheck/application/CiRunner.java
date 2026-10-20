@@ -68,7 +68,7 @@ public final class CiRunner {
             return EXIT_ERROR;
         }
         try {
-            AnalysisResult result = new ProjectAnalyzer().analyze(project);
+            AnalysisResult result = AppServices.getInstance().get(ProjectAnalyzer.class).analyze(project);
             QualityScore quality = new QualityScore();
             int score = quality.calculate(result.warnings(), result.totalSourceLines());
             int critical = quality.countCritical(result.warnings());

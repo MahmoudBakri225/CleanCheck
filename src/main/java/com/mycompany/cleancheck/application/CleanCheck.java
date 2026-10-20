@@ -128,7 +128,7 @@ public class CleanCheck {
 
             // STEP 2 - SCANNER + RULE ENGINE
 
-            final ProjectAnalyzer analyzer = new ProjectAnalyzer();
+            final ProjectAnalyzer analyzer = AppServices.getInstance().get(ProjectAnalyzer.class);
 
             AnalysisResult initialAnalysis = analyzer.analyze(projectPath);
             List<Path> javaFiles = initialAnalysis.javaFiles();

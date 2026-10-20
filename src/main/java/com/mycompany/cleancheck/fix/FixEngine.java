@@ -13,7 +13,14 @@ import java.util.regex.Pattern;
 import javax.lang.model.SourceVersion;
 
 /**
- * Safe automatic fixes:
+ * Safe automatic fixes (current implementation is primarily line/regex based).
+ *
+ * <p><b>Design note:</b> Regex-based edits are intentionally limited to simple,
+ * single-line patterns. All supported automatic fixes prefer JavaParser AST rewrites via AstFixSupport,
+ * with the original regex implementation kept as a safe fallback. Until then, every applied fix
+ * is re-analyzed and can be rolled back if new findings or compile errors appear.
+ *
+ * Supported:
  * - Data Type typos
  * - Encapsulation (field visibility)
  * - System Out (remove console call line)
@@ -97,28 +104,34 @@ public class FixEngine {
         }
 
         if (ruleName.equalsIgnoreCase("Data Type")) {
-            after = fixTypeLine(before, lineNumber);
-            if (before.equals(after)) {
-                after = fixAllTypeErrors(before);
-            }
+            after = AstFixSupport.fixBuiltinTypeAtLine(before, lineNumber)
+                    .orElseGet(() -> {
+                        String a = fixTypeLine(before, lineNumber);
+                        return before.equals(a) ? fixAllTypeErrors(before) : a;
+                    });
         } else if (ruleName.equalsIgnoreCase("Encapsulation")) {
-            after = fixEncapsulationLine(before, lineNumber, javaFile);
+            after = AstFixSupport.makeFieldPrivateAtLine(before, lineNumber)
+                    .orElseGet(() -> fixEncapsulationLine(before, lineNumber, javaFile));
         } else if (ruleName.equalsIgnoreCase("System Out")) {
-            after = fixSystemOutLine(before, lineNumber);
+            after = AstFixSupport.removeSystemOutAtLine(before, lineNumber)
+                    .orElseGet(() -> fixSystemOutLine(before, lineNumber));
         } else if (ruleName.equalsIgnoreCase("Naming Convention")) {
-            after = fixNamingLine(before, lineNumber, javaFile);
+            after = AstFixSupport.renameFieldFirstLetterAtLine(before, lineNumber)
+                    .orElseGet(() -> fixNamingLine(before, lineNumber, javaFile));
         } else if (ruleName.equalsIgnoreCase("Missing Package")) {
-            after = fixMissingPackage(before, javaFile);
+            after = AstFixSupport.ensurePackage(before, javaFile).orElseGet(() -> fixMissingPackage(before, javaFile));
         } else if (ruleName.equalsIgnoreCase("Magic Number")) {
-            after = fixMagicNumber(before, lineNumber);
+            after = AstFixSupport.extractMagicIntAtLine(before, lineNumber)
+                    .orElseGet(() -> fixMagicNumber(before, lineNumber));
         } else if (ruleName.equalsIgnoreCase("Unused Import")) {
-            after = fixUnusedImport(before, lineNumber);
+            after = AstFixSupport.removeImportAtLine(before, lineNumber).orElseGet(() -> fixUnusedImport(before, lineNumber));
         } else if (ruleName.equalsIgnoreCase("String Comparison")) {
-            after = fixStringComparison(before, lineNumber);
+            after = AstFixSupport.fixStringEqualityAtLine(before, lineNumber).orElseGet(() -> fixStringComparison(before, lineNumber));
         } else if (ruleName.equalsIgnoreCase("Unused Variable")) {
-            after = fixUnusedVariable(before, lineNumber);
+            after = AstFixSupport.removeLocalVariableAtLine(before, lineNumber)
+                    .orElseGet(() -> fixUnusedVariable(before, lineNumber));
         } else if (ruleName.equalsIgnoreCase("Information Leak")) {
-            after = fixPrintStackTrace(before, lineNumber, javaFile);
+            after = AstFixSupport.replacePrintStackTraceAtLine(before, lineNumber).orElseGet(() -> fixPrintStackTrace(before, lineNumber, javaFile));
         }
 
         if (!before.equals(after)) {

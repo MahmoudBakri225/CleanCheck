@@ -131,7 +131,7 @@ public final class WebServer {
 
     private static void handleAnalyze(HttpExchange exchange, Path project) throws IOException {
         try {
-            AnalysisResult result = new ProjectAnalyzer().analyze(project);
+            AnalysisResult result = AppServices.getInstance().get(ProjectAnalyzer.class).analyze(project);
             String json = JsonReportExporter.toJson(result);
             respond(exchange, 200, "application/json; charset=utf-8", json);
         } catch (Exception ex) {
@@ -143,7 +143,7 @@ public final class WebServer {
     private static void handleReport(HttpExchange exchange, Path project) throws IOException {
         Path temporaryReport = null;
         try {
-            AnalysisResult result = new ProjectAnalyzer().analyze(project);
+            AnalysisResult result = AppServices.getInstance().get(ProjectAnalyzer.class).analyze(project);
             temporaryReport = Files.createTempFile("cleancheck-web-report-", ".html");
             String path = new HtmlReportGenerator().generateStandalone(result, temporaryReport);
             String html = Files.readString(Path.of(path));

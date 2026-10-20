@@ -41,8 +41,7 @@ final class IssueLoader {
 
         try (
                 Connection connection =
-                        new DatabaseConnection()
-                                .getConnection();
+                        DatabaseConnection.getConnection();
 
                 PreparedStatement statement =
                         connection.prepareStatement(sql)

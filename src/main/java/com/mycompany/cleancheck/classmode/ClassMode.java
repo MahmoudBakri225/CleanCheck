@@ -1,5 +1,7 @@
 package com.mycompany.cleancheck.classmode;
 
+import com.mycompany.cleancheck.application.AppServices;
+
 import com.mycompany.cleancheck.analysis.Warning;
 import com.mycompany.cleancheck.application.AnalysisResult;
 import com.mycompany.cleancheck.application.ProjectAnalyzer;
@@ -29,7 +31,7 @@ public final class ClassMode {
         }
 
         QualityScore score = new QualityScore();
-        ProjectAnalyzer analyzer = new ProjectAnalyzer();
+        ProjectAnalyzer analyzer = AppServices.getInstance().get(ProjectAnalyzer.class);
         List<ClassReport> reports = new ArrayList<>();
 
         try (var children = Files.list(classFolder)) {

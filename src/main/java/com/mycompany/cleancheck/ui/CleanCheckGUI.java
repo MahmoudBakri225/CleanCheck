@@ -4,6 +4,7 @@ import com.mycompany.cleancheck.analysis.Warning;
 import com.mycompany.cleancheck.analysis.Severity;
 import com.mycompany.cleancheck.application.CleanCheck;
 import com.mycompany.cleancheck.application.AnalysisResult;
+import com.mycompany.cleancheck.application.AppServices;
 import com.mycompany.cleancheck.application.ProjectAnalyzer;
 import com.mycompany.cleancheck.report.ReportWriter;
 import com.mycompany.cleancheck.fix.FixEngine;
@@ -52,6 +53,8 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -67,6 +70,8 @@ import java.util.Set;
  * About).
  */
 public class CleanCheckGUI extends Application {
+
+    private PageNavigator pageNavigator;
 
     // =========================================================
     // PALETTE
@@ -363,7 +368,7 @@ public class CleanCheckGUI extends Application {
         );
     }
 
-    /** Saves a standalone HTML report of the selected project (read-only: re-analyzes, never edits sources). */
+    /** Saves a report under the project reports/YYYY-MM-DD folder (user can still change path in the dialog). */
     private void exportHtmlReport(Stage stage) {
 
         if (projectPath == null) {
@@ -371,8 +376,18 @@ public class CleanCheckGUI extends Application {
             return;
         }
 
+        String dateFolder = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+        Path reportsDir = projectPath.resolve("reports").resolve(dateFolder);
+        try {
+            Files.createDirectories(reportsDir);
+        } catch (IOException ex) {
+            setStatus("Cannot create reports folder: " + ex.getMessage(), CRITICAL);
+            return;
+        }
+
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Export HTML report");
+        chooser.setTitle("Export report (default: project/reports/" + dateFolder + ")");
+        chooser.setInitialDirectory(reportsDir.toFile());
         chooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("HTML report (*.html)", "*.html"),
                 new FileChooser.ExtensionFilter("JSON (*.json)", "*.json"),
@@ -396,7 +411,7 @@ public class CleanCheckGUI extends Application {
             try {
                 // Fresh read-only scan; the baseline comparison of the last Analyze run is attached
                 // only if the code has not changed since (same findings), never stale numbers.
-                AnalysisResult analysis = new ProjectAnalyzer().analyze(root)
+                AnalysisResult analysis = AppServices.getInstance().get(ProjectAnalyzer.class).analyze(root)
                         .withRegressionFrom(lastAnalysis);
                 String written = ReportWriter.write(analysis, target.toPath());
                 Platform.runLater(() -> setStatus(
@@ -538,27 +553,25 @@ public class CleanCheckGUI extends Application {
         showPage(name);
     }
 
-    private void showPage(
-            String name
-    ) {
-
-        pageHost
-                .getChildren()
-                .setAll(
-                        pages.get(name)
-                );
-
-        navButtons.forEach(
-                (key, b)
-                -> styleNav(
-                        b,
-                        key.equals(name)
-                )
-        );
-
-        if ("Analyze".equals(name) && analyzePage != null) {
+    private void showPage(String name) {
+        // Prefer the exact nav key so pages like "Class Mode" are not lost.
+        String candidate = name;
+        Node page = pages.get(candidate);
+        if (page == null) {
+            PageId id = PageId.fromLabel(name);
+            if (id != null) {
+                candidate = id.label();
+                page = pages.get(candidate);
+            }
+        }
+        final String resolved = candidate;
+        if (page != null) {
+            pageHost.getChildren().setAll(page);
+        }
+        navButtons.forEach((key, b) -> styleNav(b, key.equals(resolved)));
+        if (PageId.ANALYZE.label().equals(resolved) && analyzePage != null) {
             analyzePage.refresh();
-        } else if ("Home".equals(name) && homePage != null) {
+        } else if (PageId.HOME.label().equals(resolved) && homePage != null) {
             homePage.refresh();
         }
     }
@@ -1260,7 +1273,7 @@ public class CleanCheckGUI extends Application {
                     throw new IOException("Could not find source file: " + fileName);
                 }
                 VerifiedFix.Outcome outcome = VerifiedFix.apply(
-                        new ProjectAnalyzer(), analysisRoot, javaFile, rule, issueLine);
+                        AppServices.getInstance().get(ProjectAnalyzer.class), analysisRoot, javaFile, rule, issueLine);
                 return new FixExecution(javaFile, issueLine, outcome);
             }
         };

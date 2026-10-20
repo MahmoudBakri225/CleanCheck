@@ -13,6 +13,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Default matches the team IDE: Java 26 + JavaFX 26.
+             Optional profile -Pjava21 for JDK 21 lab machines. -->
         <maven.compiler.release>26</maven.compiler.release>
         <javafx.version>26</javafx.version>
         <!-- Default for exec:java (CLI). Override with -Dexec.mainClass=... -->
@@ -41,12 +43,6 @@
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-core</artifactId>
             <version>3.28.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.11.4</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -154,6 +150,14 @@
                 </dependency>
             </dependencies>
         </profile>
+
+        <profile>
+            <id>java21</id>
+            <properties>
+                <maven.compiler.release>21</maven.compiler.release>
+                <javafx.version>21.0.5</javafx.version>
+            </properties>
+        </profile>
     </profiles>
 
     <build>
@@ -231,4 +235,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
