@@ -478,7 +478,7 @@ To suppress a file:
 ## 🗃️ Data and Privacy
 
 - Project source is analyzed locally by the desktop app and CLI.
-- Scan history is stored locally in SQLite by default at `~/.cleancheck/database/cleancheck.db`.
+- Scan history is stored locally in SQLite by default at `database/cleancheck.db`.
 - Backups for verified fixes are stored locally under `.cleancheck-backups`.
 - The optional local Web UI binds to loopback (`127.0.0.1`).
 - Report files are written only when you choose an export location.
