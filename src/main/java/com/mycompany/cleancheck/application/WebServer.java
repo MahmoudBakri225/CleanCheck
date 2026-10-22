@@ -29,10 +29,11 @@ public final class WebServer {
 
     public static void main(String[] args) throws Exception {
         int port = 8787;
-        Path defaultProject = Path.of("sample-projects/problematic-project").toAbsolutePath().normalize();
-        if (args.length > 0) {
-            defaultProject = Path.of(args[0]).toAbsolutePath().normalize();
+        if (args.length == 0) {
+            System.err.println("Usage: WebServer <project-folder> [port]");
+            return;
         }
+        Path defaultProject = Path.of(args[0]).toAbsolutePath().normalize();
         if (args.length > 1) {
             port = Integer.parseInt(args[1]);
         }
@@ -80,6 +81,11 @@ public final class WebServer {
     }
 
     private static void route(HttpExchange exchange, Path project) throws IOException {
+        String host = exchange.getRequestHeaders().getFirst("Host");
+        if (!isLocalHost(host)) {
+            respond(exchange, 403, "text/plain; charset=utf-8", "Only local Host values are accepted.");
+            return;
+        }
         if (!exchange.getRequestMethod().equals("GET")) {
             exchange.getResponseHeaders().set("Allow", "GET");
             respond(exchange, 405, "text/plain; charset=utf-8", "Method not allowed.");
@@ -131,25 +137,28 @@ public final class WebServer {
 
     private static void handleAnalyze(HttpExchange exchange, Path project) throws IOException {
         try {
-            AnalysisResult result = AppServices.getInstance().get(ProjectAnalyzer.class).analyze(project);
+            AnalysisResult result = new ProjectAnalyzer().analyze(project);
             String json = JsonReportExporter.toJson(result);
             respond(exchange, 200, "application/json; charset=utf-8", json);
         } catch (Exception ex) {
+            // Do not leak internal exception details to the HTTP client.
+            System.err.println("CleanCheck Web analyze failed: " + safeErrorDetail(ex));
             respond(exchange, 500, "application/json; charset=utf-8",
-                    "{\"error\":" + quote(ex.getMessage()) + "}");
+                    "{\"error\":" + quote("Analysis failed. See server log for details.") + "}");
         }
     }
 
     private static void handleReport(HttpExchange exchange, Path project) throws IOException {
         Path temporaryReport = null;
         try {
-            AnalysisResult result = AppServices.getInstance().get(ProjectAnalyzer.class).analyze(project);
+            AnalysisResult result = new ProjectAnalyzer().analyze(project);
             temporaryReport = Files.createTempFile("cleancheck-web-report-", ".html");
             String path = new HtmlReportGenerator().generateStandalone(result, temporaryReport);
             String html = Files.readString(Path.of(path));
             respond(exchange, 200, "text/html; charset=utf-8", html);
         } catch (Exception ex) {
-            respond(exchange, 500, "text/plain; charset=utf-8", "Report failed: " + ex.getMessage());
+            System.err.println("CleanCheck Web report failed: " + safeErrorDetail(ex));
+            respond(exchange, 500, "text/plain; charset=utf-8", "Report failed. See server log for details.");
         } finally {
             if (temporaryReport != null) {
                 Files.deleteIfExists(temporaryReport);
@@ -180,5 +189,75 @@ public final class WebServer {
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
+    }
+
+    /** Safe one-line detail for local server logs only (never returned to clients). */
+    private static String safeErrorDetail(Throwable ex) {
+        if (ex == null) {
+            return "unknown error";
+        }
+        String message = ex.getMessage();
+        if (message == null || message.isBlank()) {
+            return ex.getClass().getSimpleName();
+        }
+        // Keep log lines bounded; paths/messages can be long.
+        String trimmed = message.replace('\r', ' ').replace('\n', ' ').trim();
+        return ex.getClass().getSimpleName() + ": "
+                + (trimmed.length() > 400 ? trimmed.substring(0, 400) + "…" : trimmed);
+    }
+
+    /**
+     * Accepts only loopback Host values: localhost, 127.0.0.1, ::1, and bracketed [::1],
+     * optionally with a numeric TCP port in 1–65535.
+     */
+    private static boolean isLocalHost(String host) {
+        if (host == null) {
+            return false;
+        }
+        String value = host.trim().toLowerCase(java.util.Locale.ROOT);
+        String hostname;
+        String portText = null;
+
+        if (value.startsWith("[")) {
+            int close = value.indexOf(']');
+            if (close <= 1) {
+                return false;
+            }
+            hostname = value.substring(1, close);
+            if (close + 1 < value.length()) {
+                if (value.charAt(close + 1) != ':' || close + 2 >= value.length()) {
+                    return false;
+                }
+                portText = value.substring(close + 2);
+            }
+        } else if (value.equals("localhost") || value.equals("127.0.0.1") || value.equals("::1")) {
+            hostname = value;
+        } else {
+            // IPv4 or hostname with optional :port — last colon separates port for non-IPv6 forms.
+            int separator = value.lastIndexOf(':');
+            if (separator <= 0 || separator == value.length() - 1) {
+                return false;
+            }
+            hostname = value.substring(0, separator);
+            portText = value.substring(separator + 1);
+        }
+
+        if (portText != null) {
+            if (!portText.chars().allMatch(Character::isDigit) || portText.length() > 5) {
+                return false;
+            }
+            try {
+                int port = Integer.parseInt(portText);
+                if (port < 1 || port > 65535) {
+                    return false;
+                }
+            } catch (NumberFormatException invalidPort) {
+                return false;
+            }
+        }
+
+        return hostname.equals("localhost")
+                || hostname.equals("127.0.0.1")
+                || hostname.equals("::1");
     }
 }

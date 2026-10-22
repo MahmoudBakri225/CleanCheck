@@ -26,8 +26,8 @@ public final class AppServices {
         registerFactory(JavaFileScanner.class, JavaFileScanner::new);
         registerFactory(SourceDiscovery.class, () -> new SourceDiscovery(get(JavaFileScanner.class)));
         registerFactory(RuleEngine.class, RuleEngine::new);
-        // engine=null → analyze() loads cleancheck.properties for the chosen project root
-        registerFactory(ProjectAnalyzer.class, () -> new ProjectAnalyzer(get(SourceDiscovery.class), null));
+        // ProjectAnalyzer loads cleancheck.properties for the selected project root.
+        registerFactory(ProjectAnalyzer.class, ProjectAnalyzer::new);
     }
 
     public static AppServices getInstance() {

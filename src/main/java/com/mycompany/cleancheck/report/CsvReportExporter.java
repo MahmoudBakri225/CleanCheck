@@ -27,7 +27,7 @@ public final class CsvReportExporter {
 
     public static void write(AnalysisResult result, Path target) throws IOException {
         ReportOutputGuard.rejectSourceOverwrite(result, target);
-        ReportFileWriter.writeUtf8(target, "﻿" + toCsv(result));
+        ReportFileWriter.writeUtf8(target, "\uFEFF" + toCsv(result));
     }
 
     public static String cell(String value) {

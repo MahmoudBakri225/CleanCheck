@@ -46,6 +46,7 @@ public class DatabaseInitializer {
 
                     FOREIGN KEY (ProjectId)
                         REFERENCES Project(ProjectId)
+                        ON DELETE CASCADE
                 )
                 """;
 
@@ -68,6 +69,7 @@ public class DatabaseInitializer {
 
                     FOREIGN KEY (ScanId)
                         REFERENCES Scan(ScanId)
+                        ON DELETE CASCADE
                 )
                 """;
 
@@ -98,10 +100,12 @@ public class DatabaseInitializer {
                     CreatedAt TEXT NOT NULL,
 
                     FOREIGN KEY (ProjectId)
-                        REFERENCES Project(ProjectId),
+                        REFERENCES Project(ProjectId)
+                        ON DELETE CASCADE,
 
                     FOREIGN KEY (ScanId)
                         REFERENCES Scan(ScanId)
+                        ON DELETE CASCADE
                 )
                 """;
 
@@ -121,6 +125,8 @@ public class DatabaseInitializer {
                 statement.execute(baselineTable);
                 mergeDuplicateProjectPaths(connection);
                 statement.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_project_path ON Project(ProjectPath)");
+                statement.execute("CREATE INDEX IF NOT EXISTS ix_scan_project_id ON Scan(ProjectId, ScanId DESC)");
+                statement.execute("CREATE INDEX IF NOT EXISTS ix_issue_scan_id ON Issue(ScanId)");
                 connection.commit();
             } catch (SQLException | RuntimeException failure) {
                 try {

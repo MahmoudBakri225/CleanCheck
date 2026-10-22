@@ -15,7 +15,7 @@ import java.util.Set;
 public class SolidDipRule implements Rule {
     private static final Set<String> IGNORE = Set.of(
             "String", "StringBuilder", "ArrayList", "HashMap", "HashSet", "LinkedList",
-            "Optional", "Path", "File", "Scanner", "Object");
+            "Optional", "Path", "File", "Scanner", "Object", "Random", "Date");
     @Override public String getName() { return "SOLID DIP"; }
     @Override
     public List<Warning> analyze(String fileName, String source) {

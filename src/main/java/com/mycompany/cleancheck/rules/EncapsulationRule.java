@@ -1,6 +1,7 @@
 package com.mycompany.cleancheck.rules;
 
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.Modifier;
 import com.mycompany.cleancheck.analysis.JavaAst;
 import com.mycompany.cleancheck.analysis.Severity;
 import com.mycompany.cleancheck.analysis.Warning;
@@ -22,6 +23,11 @@ public class EncapsulationRule implements Rule {
         JavaAst.parse(source).ifPresent(cu -> {
             for (FieldDeclaration field : cu.findAll(FieldDeclaration.class)) {
                 if (field.isPublic() && field.isStatic() && field.isFinal()) {
+                    continue;
+                }
+                if (field.findAncestor(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration.class)
+                        .map(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration::isInterface).orElse(false)
+                        || (field.isStatic() && field.isFinal())) {
                     continue;
                 }
                 if (field.isPrivate()) {

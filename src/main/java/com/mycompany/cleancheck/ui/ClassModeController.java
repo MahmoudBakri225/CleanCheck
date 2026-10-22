@@ -9,9 +9,6 @@ import com.mycompany.cleancheck.classmode.ClassMode;
 import com.mycompany.cleancheck.classmode.ClassReport;
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Files;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -241,10 +238,7 @@ final class ClassModeController {
             return;
         }
         try {
-            String dateFolder = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-            Path reportsDir = classFolderPath.resolve("reports").resolve(dateFolder);
-            Files.createDirectories(reportsDir);
-            Path output = reportsDir.resolve("CleanCheck_Class_Report.html");
+            Path output = classFolderPath.resolve("reports/CleanCheck_Class_Report.html");
             ClassHtmlReportExporter.export(output, reports, ClassMode.commonRules(reports));
             status.accept("Class HTML report exported: " + output, SUCCESS);
         } catch (Exception ex) {

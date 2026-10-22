@@ -3,9 +3,9 @@ package com.mycompany.cleancheck.rules;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.expr.DoubleLiteralExpr;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
+import com.github.javaparser.ast.expr.LongLiteralExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
-import com.github.javaparser.ast.nodeTypes.NodeWithArguments;
 import com.mycompany.cleancheck.analysis.JavaAst;
 import com.mycompany.cleancheck.analysis.Severity;
 import com.mycompany.cleancheck.analysis.Warning;
@@ -43,14 +43,6 @@ public class MagicNumberRule implements Rule {
                 }
             }
 
-            Set<Integer> argumentLines = new HashSet<>();
-            for (MethodCallExpr call : cu.findAll(MethodCallExpr.class)) {
-                markArgumentLines(call, argumentLines);
-            }
-            for (ObjectCreationExpr create : cu.findAll(ObjectCreationExpr.class)) {
-                markArgumentLines(create, argumentLines);
-            }
-
             for (IntegerLiteralExpr lit : cu.findAll(IntegerLiteralExpr.class)) {
                 String value = lit.getValue();
                 if (ALLOWED.contains(value)) {
@@ -64,13 +56,14 @@ public class MagicNumberRule implements Rule {
                 }
 
                 int line = JavaAst.line(lit);
-                if (constantLines.contains(line) || argumentLines.contains(line) || !reported.add(line)) {
+                if (constantLines.contains(line) || isInFinalLocalDeclaration(lit) || reported.contains(line)) {
                     continue;
                 }
                 // Prefer skipping when this exact node is a call argument (same line can mix cases)
                 if (isDirectCallArgument(lit)) {
                     continue;
                 }
+                reported.add(line);
 
                 warnings.add(new Warning(
                         fileName,
@@ -80,6 +73,22 @@ public class MagicNumberRule implements Rule {
                         "Magic number " + value + " found.",
                         "Extract it to a named constant that explains its meaning."
                 ));
+            }
+
+            for (LongLiteralExpr lit : cu.findAll(LongLiteralExpr.class)) {
+                String value = lit.getValue();
+                if (ALLOWED.contains(value)) {
+                    continue;
+                }
+                int line = JavaAst.line(lit);
+                if (constantLines.contains(line) || isInFinalLocalDeclaration(lit) || reported.contains(line)
+                        || isDirectCallArgument(lit)) {
+                    continue;
+                }
+                reported.add(line);
+                warnings.add(new Warning(fileName, line, getName(), Severity.INFO,
+                        "Magic number " + value + " found.",
+                        "Extract it to a named constant that explains its meaning."));
             }
 
             for (DoubleLiteralExpr lit : cu.findAll(DoubleLiteralExpr.class)) {
@@ -93,12 +102,13 @@ public class MagicNumberRule implements Rule {
                     continue;
                 }
                 int line = JavaAst.line(lit);
-                if (constantLines.contains(line) || !reported.add(line)) {
+                if (constantLines.contains(line) || isInFinalLocalDeclaration(lit) || reported.contains(line)) {
                     continue;
                 }
                 if (isDirectCallArgument(lit)) {
                     continue;
                 }
+                reported.add(line);
                 warnings.add(new Warning(
                         fileName,
                         line,
@@ -113,17 +123,34 @@ public class MagicNumberRule implements Rule {
         return warnings;
     }
 
-    private static void markArgumentLines(NodeWithArguments<?> call, Set<Integer> argumentLines) {
-        call.getArguments().forEach(arg -> argumentLines.add(JavaAst.line(arg)));
+    private static boolean isDirectCallArgument(com.github.javaparser.ast.Node literal) {
+        com.github.javaparser.ast.Node child = literal;
+        com.github.javaparser.ast.Node parent = child.getParentNode().orElse(null);
+        while (parent != null) {
+            if (parent instanceof MethodCallExpr call) {
+                for (com.github.javaparser.ast.Node argument : call.getArguments()) {
+                    if (contains(argument, child)) return true;
+                }
+            }
+            if (parent instanceof ObjectCreationExpr creation) {
+                for (com.github.javaparser.ast.Node argument : creation.getArguments()) {
+                    if (contains(argument, child)) return true;
+                }
+            }
+            child = parent;
+            parent = parent.getParentNode().orElse(null);
+        }
+        return false;
     }
 
-    private static boolean isDirectCallArgument(com.github.javaparser.ast.Node literal) {
-        return literal.getParentNode()
-                .filter(parent -> parent instanceof MethodCallExpr || parent instanceof ObjectCreationExpr)
-                .isPresent()
-                || literal.getParentNode()
-                .flatMap(com.github.javaparser.ast.Node::getParentNode)
-                .filter(grand -> grand instanceof MethodCallExpr || grand instanceof ObjectCreationExpr)
-                .isPresent();
+    private static boolean contains(com.github.javaparser.ast.Node ancestor,
+            com.github.javaparser.ast.Node candidate) {
+        return ancestor == candidate || ancestor.findAll(com.github.javaparser.ast.Node.class).contains(candidate);
+    }
+
+    private static boolean isInFinalLocalDeclaration(com.github.javaparser.ast.Node literal) {
+        return literal.findAncestor(com.github.javaparser.ast.expr.VariableDeclarationExpr.class)
+                .map(com.github.javaparser.ast.expr.VariableDeclarationExpr::isFinal)
+                .orElse(false);
     }
 }

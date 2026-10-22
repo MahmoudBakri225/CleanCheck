@@ -24,7 +24,8 @@ public final class JsonReportExporter {
         int score = quality.calculate(warnings, result.totalSourceLines());
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
-        sb.append("  \"projectRoot\": ").append(quote(result.projectRoot().toString())).append(",\n");
+        sb.append("  \"projectRoot\": ").append(quote(result.projectRoot() == null
+                ? null : result.projectRoot().toString())).append(",\n");
         sb.append("  \"filesAnalyzed\": ").append(result.javaFiles().size()).append(",\n");
         sb.append("  \"score\": ").append(score).append(",\n");
         sb.append("  \"rating\": ").append(quote(quality.getRating(score))).append(",\n");

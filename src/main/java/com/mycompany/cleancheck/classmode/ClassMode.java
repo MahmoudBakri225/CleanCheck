@@ -1,7 +1,5 @@
 package com.mycompany.cleancheck.classmode;
 
-import com.mycompany.cleancheck.application.AppServices;
-
 import com.mycompany.cleancheck.analysis.Warning;
 import com.mycompany.cleancheck.application.AnalysisResult;
 import com.mycompany.cleancheck.application.ProjectAnalyzer;
@@ -31,11 +29,15 @@ public final class ClassMode {
         }
 
         QualityScore score = new QualityScore();
-        ProjectAnalyzer analyzer = AppServices.getInstance().get(ProjectAnalyzer.class);
+        ProjectAnalyzer analyzer = new ProjectAnalyzer();
         List<ClassReport> reports = new ArrayList<>();
 
         try (var children = Files.list(classFolder)) {
-            for (Path student : children.filter(Files::isDirectory).sorted().toList()) {
+            for (Path student : children
+                    .filter(Files::isDirectory)
+                    // Generated exports live in this folder; never treat them as a student's project.
+                    .filter(path -> !path.getFileName().toString().equalsIgnoreCase("reports"))
+                    .sorted().toList()) {
                 AnalysisResult result = analyzer.analyze(student);
                 List<Warning> warnings = result.warnings();
                 reports.add(new ClassReport(

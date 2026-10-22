@@ -43,9 +43,10 @@ public class NameConventionRule implements Rule {
             }
 
             for (FieldDeclaration field : cu.findAll(FieldDeclaration.class)) {
+                boolean constant = field.isStatic() && field.isFinal();
                 for (VariableDeclarator variable : field.getVariables()) {
                     String name = variable.getNameAsString();
-                    if (isConstantName(name) || name.isEmpty()) {
+                    if ((constant && isConstantName(name)) || name.isEmpty()) {
                         continue;
                     }
                     if (Character.isUpperCase(name.charAt(0))) {
@@ -53,6 +54,19 @@ public class NameConventionRule implements Rule {
                                 "Field '" + name + "' should start with lowercase.",
                                 "Use camelCase for fields (unless it is a constant)."));
                     }
+                }
+            }
+
+            for (VariableDeclarator variable : cu.findAll(VariableDeclarator.class)) {
+                if (!(variable.getParentNode().orElse(null)
+                        instanceof com.github.javaparser.ast.expr.VariableDeclarationExpr)) {
+                    continue;
+                }
+                String name = variable.getNameAsString();
+                if (!name.isEmpty() && Character.isUpperCase(name.charAt(0))) {
+                    warnings.add(warn(fileName, JavaAst.line(variable),
+                            "Local variable '" + name + "' should start with lowercase.",
+                            "Use camelCase for local variables."));
                 }
             }
 

@@ -5,8 +5,10 @@ import com.mycompany.cleancheck.analysis.Warning;
 import com.mycompany.cleancheck.application.AnalysisResult;
 import com.mycompany.cleancheck.quality.QualityScore;
 import com.mycompany.cleancheck.security.SecurityCatalog;
+import com.mycompany.cleancheck.rules.RuleEducation;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,7 +46,6 @@ public final class SarifReportExporter {
         sb.append("      \"driver\": {\n");
         sb.append("        \"name\": \"CleanCheck\",\n");
         sb.append("        \"version\": \"1.0.0\",\n");
-        sb.append("        \"informationUri\": \"https://github.com/cleancheck\",\n");
         sb.append("        \"rules\": [");
 
         boolean first = true;
@@ -55,7 +56,8 @@ public final class SarifReportExporter {
             sb.append("            \"id\": ").append(quote(rule.getKey())).append(",\n");
             sb.append("            \"name\": ").append(quote(rule.getValue())).append(",\n");
             sb.append("            \"shortDescription\": {\"text\": ").append(quote(rule.getValue())).append("},\n");
-            sb.append("            \"fullDescription\": {\"text\": ").append(quote(rule.getValue())).append("},\n");
+            sb.append("            \"fullDescription\": {\"text\": ")
+                    .append(quote(RuleEducation.forRule(rule.getValue()))).append("},\n");
             sb.append("            \"defaultConfiguration\": {\"level\": \"warning\"}");
             SecurityCatalog.info(rule.getValue()).ifPresent(info -> {
                 sb.append(",\n            \"help\": {\"text\": ")
@@ -63,7 +65,7 @@ public final class SarifReportExporter {
                 sb.append("            \"helpUri\": ").append(quote(info.cweUrl())).append(",\n");
                 sb.append("            \"properties\": {\"tags\": [\"security\", ")
                         .append(quote("external/cwe/" + info.cwe().toLowerCase(Locale.ROOT)))
-                        .append("], \"precision\": \"high\"}");
+                        .append("], \"precision\": \"medium\"}");
             });
             sb.append("\n          }");
         }
@@ -83,7 +85,8 @@ public final class SarifReportExporter {
             artifactIndex.put(uri, idx++);
             sb.append(first ? "\n" : ",\n");
             first = false;
-            sb.append("      {\"location\": {\"uri\": ").append(quote(uri)).append("}, \"sourceLanguage\": \"java\"}");
+            sb.append("      {\"location\": {\"uri\": ").append(quote(sarifUri(uri)))
+                    .append("}, \"sourceLanguage\": \"java\"}");
         }
         sb.append("\n    ],\n");
 
@@ -104,9 +107,9 @@ public final class SarifReportExporter {
             sb.append("          \"physicalLocation\": {\n");
             if (art != null) {
                 sb.append("            \"artifactLocation\": {\"index\": ").append(art)
-                        .append(", \"uri\": ").append(quote(file)).append("},\n");
+                        .append(", \"uri\": ").append(quote(sarifUri(file))).append("},\n");
             } else {
-                sb.append("            \"artifactLocation\": {\"uri\": ").append(quote(file)).append("},\n");
+                sb.append("            \"artifactLocation\": {\"uri\": ").append(quote(sarifUri(file))).append("},\n");
             }
             sb.append("            \"region\": {\"startLine\": ").append(Math.max(1, w.getLineNumber())).append("}\n");
             sb.append("          }\n");
@@ -137,6 +140,14 @@ public final class SarifReportExporter {
             return "CC000";
         }
         return "CC/" + ruleName.toUpperCase(Locale.ROOT).replace(' ', '_');
+    }
+
+    private static String sarifUri(String path) {
+        try {
+            return new URI(null, path.replace('\\', '/'), null).toASCIIString();
+        } catch (java.net.URISyntaxException invalid) {
+            return path.replace('\\', '/').replace(" ", "%20");
+        }
     }
 
     private static String sarifLevel(Severity severity) {

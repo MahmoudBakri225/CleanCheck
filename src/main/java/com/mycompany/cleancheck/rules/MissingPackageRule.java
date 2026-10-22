@@ -19,6 +19,9 @@ public class MissingPackageRule implements Rule {
         List<Warning> warnings = new ArrayList<>();
 
         JavaAst.parse(source).ifPresent(cu -> {
+            if (fileName.endsWith("module-info.java")) {
+                return;
+            }
             if (cu.getPackageDeclaration().isEmpty()) {
                 warnings.add(new Warning(
                         fileName,

@@ -43,7 +43,7 @@ The analyzer loads `cleancheck.properties` from the selected project root. Set `
 to use one explicit configuration across projects. A configuration file that exists but cannot be read fails the scan
 with its path; missing configuration files use the built-in defaults.
 
-By default, SQLite history is stored in `database/cleancheck.db`. To use another database file for an isolated run, set
+By default, SQLite history is stored in `~/.cleancheck/database/cleancheck.db`. To use another database file for an isolated run, set
 the JVM property `cleancheck.database.path` to its absolute path (for example,
 `-Dcleancheck.database.path=/tmp/cleancheck-test.db`).
 

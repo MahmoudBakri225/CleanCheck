@@ -1,4 +1,2 @@
-#!/usr/bin/env bash
-set -euo pipefail
-cd "$(dirname "$0")/.."
-mvn -q javafx:run
+#!/usr/bin/env sh
+exec "$(dirname "$0")/../run-gui.sh" "$@"

@@ -128,7 +128,7 @@ public class CleanCheck {
 
             // STEP 2 - SCANNER + RULE ENGINE
 
-            final ProjectAnalyzer analyzer = AppServices.getInstance().get(ProjectAnalyzer.class);
+            final ProjectAnalyzer analyzer = new ProjectAnalyzer();
 
             AnalysisResult initialAnalysis = analyzer.analyze(projectPath);
             List<Path> javaFiles = initialAnalysis.javaFiles();
@@ -192,10 +192,15 @@ public class CleanCheck {
 
         } catch (Exception exception) {
 
-            ConsoleOutput.out().println(
-                    "ERROR: Unable to complete analysis: "
-                    + exception.getMessage()
-            );
+            String detail = exception.getMessage();
+            if (detail == null || detail.isBlank()) {
+                detail = exception.getClass().getSimpleName();
+            }
+            Throwable cause = exception.getCause();
+            if (cause != null && cause.getMessage() != null && !cause.getMessage().isBlank()) {
+                detail = detail + " (" + cause.getMessage() + ")";
+            }
+            ConsoleOutput.out().println("ERROR: Unable to complete analysis: " + detail);
             ConsoleOutput.out().println("ANALYSIS_STATUS : FAILED");
             return Outcome.failed(EXIT_ERROR);
         }

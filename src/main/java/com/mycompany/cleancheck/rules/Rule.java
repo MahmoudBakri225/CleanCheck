@@ -4,7 +4,7 @@ import com.mycompany.cleancheck.analysis.Warning;
 
 import java.util.List;
 
-public interface Rule extends AnalysisRule {
+public interface Rule {
 
     String getName();
 

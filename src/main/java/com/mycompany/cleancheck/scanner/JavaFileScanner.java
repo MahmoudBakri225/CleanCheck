@@ -1,5 +1,7 @@
 package com.mycompany.cleancheck.scanner;
 
+import com.mycompany.cleancheck.analysis.SourceTextIO;
+
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.ByteBuffer;
@@ -19,10 +21,16 @@ import java.util.Set;
 public class JavaFileScanner {
 
     /** Tooling folders that are skipped wherever they appear. */
-    private static final Set<String> ALWAYS_EXCLUDED = Set.of(".cleancheck-backups", ".git");
+    private static final Set<String> ALWAYS_EXCLUDED = Set.of(".cleancheck-backups", ".git", ".idea", ".svn", "node_modules");
 
     /** Build output folders: skipped, except inside a source tree (a package may be called "build" or "out"). */
     private static final Set<String> BUILD_OUTPUT = Set.of("target", "build", "out");
+
+    /** Hard cap on directory depth relative to the project root (protects huge trees / monorepos). */
+    private static final int MAX_RELATIVE_DEPTH = 40;
+
+    /** Hard cap on discovered .java files per scan (avoids unbounded memory use). */
+    private static final int MAX_JAVA_FILES = 25_000;
 
     public List<Path> scan(Path folder) throws IOException {
         if (Files.isSymbolicLink(folder)) {
@@ -32,17 +40,29 @@ public class JavaFileScanner {
             throw new IOException("Folder does not exist: " + folder);
         }
 
+        Path root = folder.toAbsolutePath().normalize();
         List<Path> javaFiles = new ArrayList<>();
         Files.walkFileTree(folder, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
-                return !directory.equals(folder) && isExcluded(folder, directory)
-                        ? FileVisitResult.SKIP_SUBTREE
-                        : FileVisitResult.CONTINUE;
+                Path absolute = directory.toAbsolutePath().normalize();
+                if (!absolute.equals(root)) {
+                    int depth = root.relativize(absolute).getNameCount();
+                    if (depth > MAX_RELATIVE_DEPTH) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+                    if (isExcluded(folder, directory)) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+                }
+                return FileVisitResult.CONTINUE;
             }
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                if (javaFiles.size() >= MAX_JAVA_FILES) {
+                    return FileVisitResult.TERMINATE;
+                }
                 if (!Files.isSymbolicLink(file) && attributes.isRegularFile()
                         && !isExcluded(folder, file) && file.toString().endsWith(".java")) {
                     javaFiles.add(file);
@@ -50,6 +70,10 @@ public class JavaFileScanner {
                 return FileVisitResult.CONTINUE;
             }
         });
+        if (javaFiles.size() >= MAX_JAVA_FILES) {
+            throw new IOException("Project exceeds the maximum of " + MAX_JAVA_FILES
+                    + " Java source files. Narrow the folder or use exclude globs in cleancheck.properties.");
+        }
         javaFiles.sort(Comparator.naturalOrder()); // Keep reports deterministic regardless of filesystem order.
         return List.copyOf(javaFiles);
     }
@@ -77,15 +101,6 @@ public class JavaFileScanner {
      * is still analyzed, decoded as ISO-8859-1, instead of aborting the whole scan.
      */
     public String readFile(Path file) throws IOException {
-        byte[] bytes = Files.readAllBytes(file);
-        try {
-            return StandardCharsets.UTF_8.newDecoder()
-                    .onMalformedInput(CodingErrorAction.REPORT)
-                    .onUnmappableCharacter(CodingErrorAction.REPORT)
-                    .decode(ByteBuffer.wrap(bytes))
-                    .toString();
-        } catch (CharacterCodingException ex) {
-            return new String(bytes, StandardCharsets.ISO_8859_1);
-        }
+        return SourceTextIO.read(file).text();
     }
 }

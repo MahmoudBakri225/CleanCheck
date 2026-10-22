@@ -22,7 +22,8 @@ For each file, the engine parses one JavaParser AST and shares that read-only tr
 `database/` stores projects, scans, issues and comparison/history information in SQLite.
 `ScanPersistenceService` commits a scan and all of its findings in one transaction; if any finding fails to save,
 the scan is rolled back too. Set `cleancheck.database.path` to isolate a run or test from the default
-`database/cleancheck.db` file. Each SQLite connection enables foreign-key checks and a bounded wait for concurrent writers.
+`~/.cleancheck/database/cleancheck.db` file, so installed applications do not need write access to their installation
+folder. Each SQLite connection enables foreign-key checks and a bounded wait for concurrent writers.
 
 `AnalysisResult` carries the total line count captured from the same decoded source snapshot as its findings. Quality
 scores and exports therefore do not reread files after analysis or drift when a file changes during report generation.

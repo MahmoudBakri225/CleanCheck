@@ -5,6 +5,8 @@ CleanCheck code should read like a careful review: clear names, visible evidence
 ## Java source
 
 - Use Java 26, UTF-8, four spaces, and one top-level type per file.
+- Optional thresholds in `cleancheck.properties` include `solid.srp.maxPublicMethods`,
+  `solid.ocp.maxSwitchEntries`, and `solid.isp.maxMethods`.
 - Use PascalCase for types, camelCase for methods and fields, and `UPPER_SNAKE_CASE` for constants.
 - Name methods for their action and subject (`analyzeProject`, `restoreBackup`); avoid vague names such as `runTask`.
 - Keep methods focused. Extract a helper when it gives a repeated or non-obvious decision a clear name.

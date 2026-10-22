@@ -7,6 +7,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.mycompany.cleancheck.analysis.JavaAst;
 import com.mycompany.cleancheck.analysis.Severity;
 import com.mycompany.cleancheck.analysis.Warning;
@@ -49,6 +50,12 @@ public class UnclosedResourceRule implements Rule {
                         .anyMatch(call -> call.getNameAsString().equals("close")
                                 && call.getScope().orElse(null) instanceof NameExpr n
                                 && n.getNameAsString().equals(variable));
+                boolean returned = scope.findAll(ReturnStmt.class).stream()
+                        .flatMap(statement -> statement.findAll(NameExpr.class).stream())
+                        .anyMatch(name -> name.getNameAsString().equals(variable));
+                if (returned) {
+                    continue;
+                }
                 if (!closed) {
                     warnings.add(new Warning(
                             fileName,

@@ -1,6 +1,8 @@
 package com.mycompany.cleancheck.rules;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
+import com.github.javaparser.ast.body.CallableDeclaration;
 import com.mycompany.cleancheck.analysis.JavaAst;
 import com.mycompany.cleancheck.analysis.Severity;
 import com.mycompany.cleancheck.analysis.Warning;
@@ -30,7 +32,10 @@ public class LongMethodRule implements Rule {
         List<Warning> warnings = new ArrayList<>();
 
         JavaAst.parse(source).ifPresent(cu -> {
-            for (MethodDeclaration method : cu.findAll(MethodDeclaration.class)) {
+            List<CallableDeclaration<?>> methods = new ArrayList<>();
+            methods.addAll(cu.findAll(MethodDeclaration.class));
+            methods.addAll(cu.findAll(ConstructorDeclaration.class));
+            for (CallableDeclaration<?> method : methods) {
                 int begin = method.getBegin().map(p -> p.line).orElse(0);
                 int end = method.getEnd().map(p -> p.line).orElse(begin);
                 int lines = end - begin + 1;

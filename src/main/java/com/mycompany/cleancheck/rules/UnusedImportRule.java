@@ -2,7 +2,6 @@ package com.mycompany.cleancheck.rules;
 
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.PackageDeclaration;
-import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.expr.Name;
 import com.github.javaparser.ast.expr.SimpleName;
 import com.mycompany.cleancheck.analysis.JavaAst;
@@ -13,12 +12,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class UnusedImportRule implements Rule {
 
-    private static final Pattern WORD = Pattern.compile("[A-Za-z_$][\\w$]*");
 
     @Override
     public String getName() {
@@ -42,14 +38,6 @@ public class UnusedImportRule implements Rule {
                     used.add(name.getIdentifier());
                 }
             }
-            // A name that only appears in Javadoc ({@link Foo}) still justifies its import.
-            for (Comment comment : cu.getAllComments()) {
-                Matcher m = WORD.matcher(comment.getContent());
-                while (m.find()) {
-                    used.add(m.group());
-                }
-            }
-
             for (ImportDeclaration declaration : cu.getImports()) {
                 if (declaration.isAsterisk()) {
                     continue;

@@ -30,11 +30,7 @@ public final class ScanPersistenceService {
             try {
                 int scanId = scans.saveScan(connection, projectId, qualityScore, totalIssues,
                         criticalCount, warningCount, infoCount);
-                for (Warning warning : findings) {
-                    issues.saveIssue(connection, scanId, warning.getFileName(), warning.getLineNumber(),
-                            warning.getRuleName(), warning.getSeverity().toString(), warning.getMessage(),
-                            warning.getSuggestion());
-                }
+                issues.saveIssues(connection, scanId, findings);
                 connection.commit();
                 return scanId;
             } catch (SQLException | RuntimeException failure) {

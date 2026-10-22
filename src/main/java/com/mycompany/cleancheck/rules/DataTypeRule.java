@@ -3,20 +3,19 @@ package com.mycompany.cleancheck.rules;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.type.Type;
 import com.mycompany.cleancheck.analysis.JavaAst;
-import com.mycompany.cleancheck.analysis.JavaSourceMask;
 import com.mycompany.cleancheck.analysis.Severity;
 import com.mycompany.cleancheck.analysis.Warning;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DataTypeRule implements Rule {
-
-    private static final Pattern WRONG_TOKEN = Pattern.compile("\\b(Int|Char|string)\\b");
 
     @Override
     public String getName() {
@@ -26,54 +25,53 @@ public class DataTypeRule implements Rule {
     @Override
     public List<Warning> analyze(String fileName, String source) {
         List<Warning> warnings = new ArrayList<>();
+        Set<String> reported = new HashSet<>();
 
-        // Comments and string/char literals are blanked first (line numbers are preserved), so
-        // text such as "Enter a string" is not mistaken for a mistyped type.
-        String[] lines = JavaSourceMask.maskNonCode(source).split("\\R", -1);
-        for (int i = 0; i < lines.length; i++) {
-            String line = lines[i].trim();
-            if (line.startsWith("import ")) {
-                continue;
-            }
-            Matcher matcher = WRONG_TOKEN.matcher(line);
-            while (matcher.find()) {
-                String token = matcher.group(1);
-                String fix = switch (token) {
-                    case "string" -> "Use String (capital S).";
-                    case "Int" -> "Use int (lowercase).";
-                    case "Char" -> "Use char (lowercase).";
-                    default -> "Fix the type spelling.";
-                };
-                warnings.add(new Warning(
-                        fileName,
-                        i + 1,
-                        getName(),
-                        Severity.CRITICAL,
-                        "'" + token + "' is not a valid Java type as written.",
-                        fix
-                ));
-            }
-        }
-
+        // Inspect parsed type nodes rather than searching raw lines. This avoids reporting
+        // identifiers named string/Int/Char (for example: String string or int Int).
         JavaAst.parse(source).ifPresent(cu -> {
             for (FieldDeclaration field : cu.findAll(FieldDeclaration.class)) {
+                checkWrongType(fileName, warnings, reported, field.getElementType(), JavaAst.line(field));
                 String typeName = field.getElementType().asString();
                 for (VariableDeclarator variable : field.getVariables()) {
                     checkMoney(fileName, warnings, typeName, variable.getNameAsString(), JavaAst.line(field));
                 }
             }
             for (Parameter parameter : cu.findAll(Parameter.class)) {
-                checkMoney(
-                        fileName,
-                        warnings,
-                        parameter.getType().asString(),
-                        parameter.getNameAsString(),
-                        JavaAst.line(parameter)
-                );
+                checkWrongType(fileName, warnings, reported, parameter.getType(), JavaAst.line(parameter));
+                checkMoney(fileName, warnings, parameter.getType().asString(),
+                        parameter.getNameAsString(), JavaAst.line(parameter));
+            }
+            for (VariableDeclarator variable : cu.findAll(VariableDeclarator.class)) {
+                if (variable.getParentNode().orElse(null) instanceof com.github.javaparser.ast.expr.VariableDeclarationExpr) {
+                    checkWrongType(fileName, warnings, reported, variable.getType(), JavaAst.line(variable));
+                }
+            }
+            for (MethodDeclaration method : cu.findAll(MethodDeclaration.class)) {
+                checkWrongType(fileName, warnings, reported, method.getType(), JavaAst.line(method));
             }
         });
-
         return warnings;
+    }
+
+    private void checkWrongType(String fileName, List<Warning> warnings, Set<String> reported,
+            Type type, int line) {
+        String token = type.asString().replace("[]", "").trim();
+        if (!token.equals("Int") && !token.equals("Char") && !token.equals("string")) {
+            return;
+        }
+        String key = line + ":" + token;
+        if (!reported.add(key)) {
+            return;
+        }
+        String fix = switch (token) {
+            case "string" -> "Use String (capital S).";
+            case "Int" -> "Use int (lowercase).";
+            case "Char" -> "Use char (lowercase).";
+            default -> "Use a valid Java type.";
+        };
+        warnings.add(new Warning(fileName, line, getName(), Severity.WARNING,
+                "'" + token + "' is not a valid Java type as written.", fix));
     }
 
     private void checkMoney(

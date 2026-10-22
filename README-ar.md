@@ -31,7 +31,7 @@ mvn exec:java "-Dexec.mainClass=com.mycompany.cleancheck.application.CiRunner" "
 ## الإعدادات والتاريخ
 
 - انسخ `cleancheck.properties.example` إلى مجلد المشروع باسم `cleancheck.properties` لتعديل القواعد والحدود والاستثناءات.
-- تُحفظ النتائج التاريخية محليًا في `database/cleancheck.db`. يمكن تحديد قاعدة أخرى عبر `-Dcleancheck.database.path=/absolute/path/cleancheck.db`.
+- تُحفظ النتائج التاريخية محليًا في `~/.cleancheck/database/cleancheck.db`. يمكن تحديد قاعدة أخرى عبر `-Dcleancheck.database.path=/absolute/path/cleancheck.db`.
 - شغّل الاختبارات باستخدام `mvn test`.
 
 ## حدود الفحص

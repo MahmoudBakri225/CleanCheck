@@ -66,20 +66,28 @@ public class CyclomaticComplexityRule implements Rule {
 
     static int complexity(CallableDeclaration<?> callable) {
         int count = 1;
-        count += callable.findAll(IfStmt.class).size();
-        count += callable.findAll(ForStmt.class).size();
-        count += callable.findAll(ForEachStmt.class).size();
-        count += callable.findAll(WhileStmt.class).size();
-        count += callable.findAll(DoStmt.class).size();
-        count += callable.findAll(CatchClause.class).size();
-        count += callable.findAll(ConditionalExpr.class).size();
+        count += owned(callable, IfStmt.class);
+        count += owned(callable, ForStmt.class);
+        count += owned(callable, ForEachStmt.class);
+        count += owned(callable, WhileStmt.class);
+        count += owned(callable, DoStmt.class);
+        count += owned(callable, CatchClause.class);
+        count += owned(callable, ConditionalExpr.class);
         count += (int) callable.findAll(SwitchEntry.class).stream()
+                .filter(entry -> entry.findAncestor(CallableDeclaration.class).orElse(null) == callable)
                 .filter(entry -> !entry.getLabels().isEmpty())
                 .count();
         count += (int) callable.findAll(BinaryExpr.class).stream()
+                .filter(binary -> binary.findAncestor(CallableDeclaration.class).orElse(null) == callable)
                 .filter(b -> b.getOperator() == BinaryExpr.Operator.AND
                         || b.getOperator() == BinaryExpr.Operator.OR)
                 .count();
         return count;
+    }
+
+    private static int owned(CallableDeclaration<?> callable, Class<? extends com.github.javaparser.ast.Node> type) {
+        return (int) callable.findAll(type).stream()
+                .filter(node -> node.findAncestor(CallableDeclaration.class).orElse(null) == callable)
+                .count();
     }
 }

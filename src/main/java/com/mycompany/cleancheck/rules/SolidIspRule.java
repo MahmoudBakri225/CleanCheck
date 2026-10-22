@@ -21,7 +21,9 @@ public class SolidIspRule implements Rule {
         JavaAst.parse(source).ifPresent(cu -> {
             for (ClassOrInterfaceDeclaration type : cu.findAll(ClassOrInterfaceDeclaration.class)) {
                 if (!type.isInterface()) continue;
-                int methods = type.findAll(MethodDeclaration.class).size();
+                int methods = (int) type.getMembers().stream()
+                        .filter(MethodDeclaration.class::isInstance)
+                        .count();
                 if (methods > maxMethods) {
                     warnings.add(new Warning(fileName, JavaAst.line(type), getName(), Severity.INFO,
                             "Interface " + type.getNameAsString() + " declares " + methods

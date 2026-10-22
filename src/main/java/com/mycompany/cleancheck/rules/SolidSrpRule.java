@@ -21,11 +21,13 @@ public class SolidSrpRule implements Rule {
         JavaAst.parse(source).ifPresent(cu -> {
             for (ClassOrInterfaceDeclaration type : cu.findAll(ClassOrInterfaceDeclaration.class)) {
                 if (type.isInterface() || type.isAbstract()) continue;
-                long publicMethods = type.findAll(MethodDeclaration.class).stream()
+                long publicMethods = type.getMembers().stream()
+                        .filter(MethodDeclaration.class::isInstance)
+                        .map(MethodDeclaration.class::cast)
                         .filter(m -> m.isPublic() && !m.isStatic())
                         .filter(m -> {
                             String n = m.getNameAsString();
-                            return !n.startsWith("get") && !n.startsWith("set") && !n.startsWith("is");
+                            return !isAccessor(n);
                         })
                         .count();
                 if (publicMethods > maxPublicMethods) {
@@ -37,5 +39,12 @@ public class SolidSrpRule implements Rule {
             }
         });
         return warnings;
+    }
+
+    private static boolean isAccessor(String name) {
+        if (name.startsWith("get") || name.startsWith("set")) {
+            return name.length() > 3 && Character.isUpperCase(name.charAt(3));
+        }
+        return name.startsWith("is") && name.length() > 2 && Character.isUpperCase(name.charAt(2));
     }
 }

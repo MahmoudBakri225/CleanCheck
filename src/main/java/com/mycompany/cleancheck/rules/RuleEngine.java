@@ -57,10 +57,10 @@ public class RuleEngine {
                 new UnclosedResourceRule(),
                 new EqualsHashCodeRule(),
                 new ClassLengthRule(config.threshold(CleanCheckConfig.CLASS_MAX_LINES)),
-                new SolidSrpRule(),
-                new SolidOcpRule(),
+                new SolidSrpRule(config.threshold(CleanCheckConfig.SOLID_SRP_MAX_PUBLIC_METHODS)),
+                new SolidOcpRule(config.threshold(CleanCheckConfig.SOLID_OCP_MAX_SWITCH_ENTRIES)),
                 new SolidLspRule(),
-                new SolidIspRule(),
+                new SolidIspRule(config.threshold(CleanCheckConfig.SOLID_ISP_MAX_METHODS)),
                 new SolidDipRule()
         ));
         allRules.addAll(SecurityRules.all());

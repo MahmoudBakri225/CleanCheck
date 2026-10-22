@@ -65,6 +65,9 @@ public final class VerifiedFix {
         int targetsBefore = count(beforeAnalysis, rule);
         Map<String, Integer> compileBefore = CompileCheck.errorCounts(projectRoot, beforeAnalysis.javaFiles())
                 .orElse(null);
+        if (compileBefore == null && "Encapsulation".equalsIgnoreCase(rule)) {
+            return new Outcome(Status.NO_CHANGE, null, Set.of(), false);
+        }
 
         Path backup = FixVerificationService.createBackup(projectRoot, javaFile);
         try {

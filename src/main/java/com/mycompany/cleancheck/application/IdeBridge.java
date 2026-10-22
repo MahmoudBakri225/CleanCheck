@@ -20,7 +20,7 @@ public final class IdeBridge {
             System.exit(2);
         }
         Path target = Path.of(args[0]).toAbsolutePath().normalize();
-        AnalysisResult result = AppServices.getInstance().get(ProjectAnalyzer.class).analyze(
+        AnalysisResult result = new ProjectAnalyzer().analyze(
                 java.nio.file.Files.isDirectory(target) ? target : target.getParent());
         printProblems(result.warnings());
         System.exit(result.warnings().isEmpty() ? 0 : 1);

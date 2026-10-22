@@ -4,6 +4,8 @@ import com.mycompany.cleancheck.database.DatabaseConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
+import com.mycompany.cleancheck.analysis.Warning;
 
 public class IssueRepository {
 
@@ -44,6 +46,24 @@ public class IssueRepository {
             statement.setString(7, suggestion);
 
             statement.executeUpdate();
+        }
+    }
+
+    public void saveIssues(Connection connection, int scanId, List<Warning> findings) throws SQLException {
+        String sql = "INSERT INTO Issue (ScanId, FileName, LineNumber, RuleName, Severity, Message, Suggestion) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (Warning warning : findings) {
+                statement.setInt(1, scanId);
+                statement.setString(2, warning.getFileName());
+                statement.setInt(3, warning.getLineNumber());
+                statement.setString(4, warning.getRuleName());
+                statement.setString(5, warning.getSeverity().toString());
+                statement.setString(6, warning.getMessage());
+                statement.setString(7, warning.getSuggestion());
+                statement.addBatch();
+            }
+            statement.executeBatch();
         }
     }
 }

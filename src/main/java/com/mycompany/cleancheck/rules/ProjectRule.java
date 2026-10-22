@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /** A rule that needs to see every file at once (for example duplicate code across files). */
-public interface ProjectRule extends AnalysisRule {
+public interface ProjectRule {
 
     String getName();
 

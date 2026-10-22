@@ -18,6 +18,7 @@ import com.mycompany.cleancheck.analysis.JavaAst;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +31,7 @@ import java.util.Set;
 final class SecurityAst {
 
     private static final Set<String> SOURCES = Set.of(
-            "nextLine", "next", "nextInt", "readLine", "read", "getParameter",
+            "nextLine", "nextInt", "readLine", "getParameter",
             "getHeader", "getQueryString", "getInputStream", "readAllBytes", "readString"
     );
 
@@ -83,7 +84,7 @@ final class SecurityAst {
     }
 
     static boolean built(Expression e, Node context, int depth) {
-        if (depth > 4) {
+        if (depth > 64) {
             return false;
         }
         if (e.isStringLiteralExpr() || e.isNullLiteralExpr()) {
@@ -238,25 +239,27 @@ final class SecurityAst {
                 }
             }
             collectFromScope(scope);
-            // Methods whose return expression is tainted → calling them taints the destination
+            // Learn tainted returns before collecting assignments that call these methods.
             if (type.isPresent()) {
-                for (MethodDeclaration method : type.get().findAll(MethodDeclaration.class)) {
-                    if (method.getBody().isEmpty()) {
-                        continue;
-                    }
-                    method.getBody().get().findAll(com.github.javaparser.ast.stmt.ReturnStmt.class).forEach(ret -> {
-                        if (ret.getExpression().isPresent()
-                                && sourceIn(ret.getExpression().get()).isPresent()) {
-                            taintedReturns.add(method.getNameAsString());
+                List<MethodDeclaration> methods = type.get().findAll(MethodDeclaration.class);
+                boolean changed;
+                int passes = 0;
+                do {
+                    changed = false;
+                    for (MethodDeclaration method : methods) {
+                        if (method.getBody().isEmpty()) {
+                            continue;
                         }
-                    });
-                }
-                for (MethodCallExpr call : type.get().findAll(MethodCallExpr.class)) {
-                    if (taintedReturns.contains(call.getNameAsString())) {
-                        // caller site itself is a source-like expression when assigned
-                        // handled via sourceIn MethodCallExpr check below
+                        for (com.github.javaparser.ast.stmt.ReturnStmt ret
+                                : method.getBody().get().findAll(com.github.javaparser.ast.stmt.ReturnStmt.class)) {
+                            if (ret.getExpression().isPresent()
+                                    && sourceIn(ret.getExpression().get()).isPresent()) {
+                                changed |= taintedReturns.add(method.getNameAsString());
+                            }
+                        }
                     }
-                }
+                } while (changed && ++passes <= methods.size());
+                collectFromScope(scope);
             }
         }
 
@@ -295,7 +298,9 @@ final class SecurityAst {
                 if (isLocalFileRead(call)) {
                     continue;
                 }
-                if (SOURCES.contains(call.getNameAsString())) {
+                if (SOURCES.contains(call.getNameAsString())
+                        || (call.getNameAsString().equals("next") && isScannerNext(call))
+                        || (call.getNameAsString().equals("read") && isReaderRead(call))) {
                     return Optional.of(call.getNameAsString() + "() on line " + JavaAst.line(call));
                 }
                 if (taintedReturns.contains(call.getNameAsString())) {
@@ -324,6 +329,34 @@ final class SecurityAst {
             }
             String scope = call.getScope().get().toString();
             return scope.equals("Files") || scope.endsWith(".Files");
+        }
+
+        private static boolean isScannerNext(MethodCallExpr call) {
+            if (call.getScope().isEmpty()) {
+                return false;
+            }
+            Expression scope = call.getScope().get();
+            if (!scope.isNameExpr()) {
+                return false;
+            }
+            String name = scope.asNameExpr().getNameAsString();
+            Node callable = callableOf(call);
+            return callable.findAll(VariableDeclarator.class).stream()
+                    .anyMatch(variable -> variable.getNameAsString().equals(name)
+                            && variable.getType().asString().endsWith("Scanner"));
+        }
+
+        private static boolean isReaderRead(MethodCallExpr call) {
+            if (call.getScope().isEmpty() || !call.getScope().get().isNameExpr()) {
+                return false;
+            }
+            String name = call.getScope().get().asNameExpr().getNameAsString();
+            Node callable = callableOf(call);
+            return callable.findAll(VariableDeclarator.class).stream()
+                    .filter(variable -> variable.getNameAsString().equals(name))
+                    .map(variable -> variable.getType().asString())
+                    .anyMatch(type -> type.endsWith("Reader") || type.endsWith("InputStream")
+                            || type.equals("ReadableByteChannel"));
         }
     }
 }

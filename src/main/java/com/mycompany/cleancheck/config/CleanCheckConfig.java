@@ -26,6 +26,9 @@ public record CleanCheckConfig(
     public static final String NESTING_MAX_DEPTH = "nesting.maxDepth";
     public static final String CLASS_MAX_LINES = "class.maxLines";
     public static final String DUPLICATE_MIN_STATEMENTS = "duplicate.minStatements";
+    public static final String SOLID_SRP_MAX_PUBLIC_METHODS = "solid.srp.maxPublicMethods";
+    public static final String SOLID_OCP_MAX_SWITCH_ENTRIES = "solid.ocp.maxSwitchEntries";
+    public static final String SOLID_ISP_MAX_METHODS = "solid.isp.maxMethods";
 
     public static final Map<String, Integer> DEFAULT_THRESHOLDS = Map.of(
             METHOD_MAX_LINES, 40,
@@ -33,7 +36,10 @@ public record CleanCheckConfig(
             METHOD_MAX_COMPLEXITY, 10,
             NESTING_MAX_DEPTH, 4,
             CLASS_MAX_LINES, 500,
-            DUPLICATE_MIN_STATEMENTS, 5
+            DUPLICATE_MIN_STATEMENTS, 5,
+            SOLID_SRP_MAX_PUBLIC_METHODS, 12,
+            SOLID_OCP_MAX_SWITCH_ENTRIES, 8,
+            SOLID_ISP_MAX_METHODS, 10
     );
 
     public CleanCheckConfig {

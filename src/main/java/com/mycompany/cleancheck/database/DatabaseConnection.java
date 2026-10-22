@@ -2,76 +2,73 @@ package com.mycompany.cleancheck.database;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 /**
- * Provides a stable, project-root-relative SQLite connection.
- *
- * <p>Callers <b>must</b> close the returned connection (prefer try-with-resources).
- * Each call opens a fresh connection. For the desktop UI, prefer short-lived
- * connections rather than holding one open for the whole application lifetime.
- *
- * <p>A full connection pool is intentionally not used: SQLite is file-based and
- * the tool opens connections only for short persistence operations.
+ * Provides a stable, per-user SQLite connection that remains writable after installation.
+ * Each call opens a short-lived connection with foreign keys and a busy timeout enabled.
+ * Override path with -Dcleancheck.database.path=/absolute/path/cleancheck.db
  */
 public final class DatabaseConnection {
 
     private static final String DATABASE_FILE = "cleancheck.db";
     private static final String DATABASE_PATH_PROPERTY = "cleancheck.database.path";
 
-    private DatabaseConnection() {
-        // utility class
+    public DatabaseConnection() {
     }
 
-    /**
-     * Opens a new SQLite connection with foreign keys enabled and a busy timeout.
-     *
-     * @return a live connection that the caller must close
-     * @throws SQLException if the database directory cannot be prepared or the connection fails
-     */
     public static Connection getConnection() throws SQLException {
         try {
             String configuredPath = System.getProperty(DATABASE_PATH_PROPERTY);
             Path databaseFile = configuredPath == null || configuredPath.isBlank()
-                    ? Paths.get("database", DATABASE_FILE).toAbsolutePath().normalize()
-                    : Paths.get(configuredPath).toAbsolutePath().normalize();
-
+                    ? defaultDatabasePath()
+                    : Path.of(configuredPath).toAbsolutePath().normalize();
             Path databaseDirectory = databaseFile.getParent();
             if (databaseDirectory != null) {
                 Files.createDirectories(databaseDirectory);
             }
+            // Never append "?..." to the path — on Windows that becomes part of the file name.
+            String url = "jdbc:sqlite:" + databaseFile.toString().replace('\\', '/');
+            Properties properties = new Properties();
+            // Mild concurrency help without embedding query parameters in the path.
+            properties.setProperty("busy_timeout", "5000");
 
-            String url = "jdbc:sqlite:" + databaseFile;
-            Connection connection = DriverManager.getConnection(url);
-
+            Connection connection = DriverManager.getConnection(url, properties);
             try (Statement statement = connection.createStatement()) {
                 statement.execute("PRAGMA foreign_keys = ON");
                 statement.execute("PRAGMA busy_timeout = 5000");
+                // WAL improves concurrent readers; ignore if the filesystem rejects it.
+                try {
+                    statement.execute("PRAGMA journal_mode = WAL");
+                } catch (SQLException walUnsupported) {
+                    // Stay on the default journal mode.
+                }
             } catch (SQLException configurationFailure) {
                 try {
                     connection.close();
                 } catch (SQLException closeFailure) {
                     configurationFailure.addSuppressed(closeFailure);
                 }
-                throw new SQLException(
-                        "Unable to configure CleanCheck SQLite connection. "
-                                + "Check that the database path is writable and not locked by another process.",
-                        configurationFailure);
+                throw new SQLException("Unable to configure CleanCheck SQLite connection.", configurationFailure);
             }
-
             return connection;
 
         } catch (SQLException e) {
             throw e;
-        } catch (Exception e) {
-            throw new SQLException(
-                    "Unable to prepare CleanCheck database directory. "
-                            + "Ensure the working directory is writable.",
-                    e);
+        } catch (java.io.IOException | RuntimeException e) {
+            throw new SQLException("Unable to prepare CleanCheck database directory.", e);
         }
+    }
+
+    private static Path defaultDatabasePath() {
+        String home = System.getProperty("user.home");
+        if (home == null || home.isBlank()) {
+            throw new IllegalStateException("The user home directory is unavailable.");
+        }
+        return Path.of(home, ".cleancheck", "database", DATABASE_FILE).toAbsolutePath().normalize();
     }
 }

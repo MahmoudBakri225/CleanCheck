@@ -5,6 +5,9 @@ import com.mycompany.cleancheck.analysis.Warning;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +22,9 @@ public final class ClassHtmlReportExporter {
             List<ClassReport> reports,
             Map<String, Integer> commonRules
     ) throws IOException {
+        LocalDateTime generatedAt = LocalDateTime.now();
+        String generatedLabel = generatedAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String generatedIso = generatedAt.atZone(ZoneId.systemDefault()).toOffsetDateTime().toString();
         StringBuilder html = new StringBuilder();
         html.append("""
                 <!doctype html>
@@ -29,6 +35,7 @@ public final class ClassHtmlReportExporter {
                 .wrap{max-width:1100px;margin:0 auto;padding:32px}
                 h1{margin:0 0 8px 0} h2{margin-top:32px}
                 .sub{color:#64748b;margin-bottom:24px}
+                .generated{color:#64748b;font-size:13px;margin:-12px 0 24px}
                 .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-bottom:18px;
                 box-shadow:0 8px 24px rgba(15,23,42,.06)}
                 table{border-collapse:collapse;width:100%;background:#fff}
@@ -42,7 +49,9 @@ public final class ClassHtmlReportExporter {
                 </style></head><body><div class='wrap'>
                 """);
         html.append("<h1>CleanCheck — Class Report</h1>")
-                .append("<p class='sub'>Ranking and detailed findings per student project</p>");
+                .append("<p class='sub'>Ranking and detailed findings per student project</p>")
+                .append("<p class='generated'>Generated: <time datetime='")
+                .append(generatedIso).append("'>").append(generatedLabel).append("</time></p>");
 
         html.append("<div class='card'><h2 style='margin-top:0'>Ranking</h2><table><tr>")
                 .append("<th>#</th><th>Student</th><th>Score</th><th>Total</th>")

@@ -1,3 +1,26 @@
+## Delivery package (2026-10-22)
+- Source tests (`src/test`) omitted from this package for the current handoff stage.
+
+## Delivery hardening (2026-10-22)
+- Web API no longer returns raw exception messages; details stay in the server log.
+- Local Host checks accept loopback IPv6 forms (`::1`, `[::1]`) in addition to localhost/127.0.0.1.
+- GUI analysis failures no longer dump stack traces into captured console output.
+- SQLite foreign keys use ON DELETE CASCADE; connections enable WAL and shared cache.
+- Source scan caps directory depth and Java file count; skips node_modules/.idea/.svn.
+- ProjectAnalyzer reuses SourceDiscovery for exclude globs (single implementation).
+
+## Static review follow-up (2026-10-20)
+- Hardened Naming Convention auto-fix so multiline comments and text blocks are masked across the complete source before replacing identifiers.
+- Tightened local web server Host validation to allow only localhost/127.0.0.1 with an optional numeric port in the valid TCP port range.
+
+## Static-review corrections (2026-10-20)
+
+- Scoped interactive data-type fixes to the selected line instead of silently changing every matching token in a file.
+- Applied type-token replacements right-to-left so the longer `string` → `String` replacement cannot shift offsets and corrupt later matches.
+- Made missing-package detection ignore comments and string literals.
+- Reduced the required Java toolchain to Java 21 / JavaFX 21.0.8.
+- Replaced stale release-verification claims with an explicit static-review-only status; no tests or build were run for this revision.
+
 # CleanCheck changelog
 
 ## Unreleased - Reliability and analyzer hardening

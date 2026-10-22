@@ -4,7 +4,6 @@ import com.mycompany.cleancheck.analysis.Warning;
 import com.mycompany.cleancheck.analysis.Severity;
 import com.mycompany.cleancheck.application.CleanCheck;
 import com.mycompany.cleancheck.application.AnalysisResult;
-import com.mycompany.cleancheck.application.AppServices;
 import com.mycompany.cleancheck.application.ProjectAnalyzer;
 import com.mycompany.cleancheck.report.ReportWriter;
 import com.mycompany.cleancheck.fix.FixEngine;
@@ -53,8 +52,6 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -70,8 +67,6 @@ import java.util.Set;
  * About).
  */
 public class CleanCheckGUI extends Application {
-
-    private PageNavigator pageNavigator;
 
     // =========================================================
     // PALETTE
@@ -368,7 +363,7 @@ public class CleanCheckGUI extends Application {
         );
     }
 
-    /** Saves a report under the project reports/YYYY-MM-DD folder (user can still change path in the dialog). */
+    /** Saves a standalone HTML report of the selected project (read-only: re-analyzes, never edits sources). */
     private void exportHtmlReport(Stage stage) {
 
         if (projectPath == null) {
@@ -376,18 +371,8 @@ public class CleanCheckGUI extends Application {
             return;
         }
 
-        String dateFolder = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-        Path reportsDir = projectPath.resolve("reports").resolve(dateFolder);
-        try {
-            Files.createDirectories(reportsDir);
-        } catch (IOException ex) {
-            setStatus("Cannot create reports folder: " + ex.getMessage(), CRITICAL);
-            return;
-        }
-
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Export report (default: project/reports/" + dateFolder + ")");
-        chooser.setInitialDirectory(reportsDir.toFile());
+        chooser.setTitle("Export HTML report");
         chooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("HTML report (*.html)", "*.html"),
                 new FileChooser.ExtensionFilter("JSON (*.json)", "*.json"),
@@ -411,7 +396,7 @@ public class CleanCheckGUI extends Application {
             try {
                 // Fresh read-only scan; the baseline comparison of the last Analyze run is attached
                 // only if the code has not changed since (same findings), never stale numbers.
-                AnalysisResult analysis = AppServices.getInstance().get(ProjectAnalyzer.class).analyze(root)
+                AnalysisResult analysis = new ProjectAnalyzer().analyze(root)
                         .withRegressionFrom(lastAnalysis);
                 String written = ReportWriter.write(analysis, target.toPath());
                 Platform.runLater(() -> setStatus(
@@ -553,25 +538,27 @@ public class CleanCheckGUI extends Application {
         showPage(name);
     }
 
-    private void showPage(String name) {
-        // Prefer the exact nav key so pages like "Class Mode" are not lost.
-        String candidate = name;
-        Node page = pages.get(candidate);
-        if (page == null) {
-            PageId id = PageId.fromLabel(name);
-            if (id != null) {
-                candidate = id.label();
-                page = pages.get(candidate);
-            }
-        }
-        final String resolved = candidate;
-        if (page != null) {
-            pageHost.getChildren().setAll(page);
-        }
-        navButtons.forEach((key, b) -> styleNav(b, key.equals(resolved)));
-        if (PageId.ANALYZE.label().equals(resolved) && analyzePage != null) {
+    private void showPage(
+            String name
+    ) {
+
+        pageHost
+                .getChildren()
+                .setAll(
+                        pages.get(name)
+                );
+
+        navButtons.forEach(
+                (key, b)
+                -> styleNav(
+                        b,
+                        key.equals(name)
+                )
+        );
+
+        if ("Analyze".equals(name) && analyzePage != null) {
             analyzePage.refresh();
-        } else if (PageId.HOME.label().equals(resolved) && homePage != null) {
+        } else if ("Home".equals(name) && homePage != null) {
             homePage.refresh();
         }
     }
@@ -1273,7 +1260,7 @@ public class CleanCheckGUI extends Application {
                     throw new IOException("Could not find source file: " + fileName);
                 }
                 VerifiedFix.Outcome outcome = VerifiedFix.apply(
-                        AppServices.getInstance().get(ProjectAnalyzer.class), analysisRoot, javaFile, rule, issueLine);
+                        new ProjectAnalyzer(), analysisRoot, javaFile, rule, issueLine);
                 return new FixExecution(javaFile, issueLine, outcome);
             }
         };
@@ -1324,6 +1311,16 @@ public class CleanCheckGUI extends Application {
         }
 
         if (fix.applied()) {
+            Path previousBackup = lastFixBackup;
+            Path previousProjectRoot = lastFixProjectRoot;
+            if (previousBackup != null && previousProjectRoot != null) {
+                try {
+                    FixVerificationService.discardBackup(previousProjectRoot, previousBackup);
+                } catch (IOException cleanupFailure) {
+                    setStatus("The previous rollback snapshot could not be cleaned up: "
+                            + cleanupFailure.getMessage(), WARNING);
+                }
+            }
             lastFixBackup = fix.backup();
             lastFixProjectRoot = projectPath.toAbsolutePath().normalize();
             lastFixedSource = execution.javaFile().toAbsolutePath().normalize();
@@ -1458,6 +1455,26 @@ public class CleanCheckGUI extends Application {
         openProject(selected.toPath());
     }
 
+    /** Prefer a concrete ERROR line from analyzer output for the status bar. */
+    private static String firstErrorLine(String result) {
+        if (result == null || result.isBlank()) {
+            return null;
+        }
+        for (String line : result.split("\\R")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("ERROR:") || trimmed.startsWith("Analysis failed:")) {
+                return trimmed.length() > 180 ? trimmed.substring(0, 180) + "…" : trimmed;
+            }
+        }
+        for (String line : result.split("\\R")) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty() && !trimmed.startsWith("=") && !trimmed.startsWith("---")) {
+                return trimmed.length() > 180 ? trimmed.substring(0, 180) + "…" : trimmed;
+            }
+        }
+        return null;
+    }
+
     private void startAnalysis() {
 
         if (analysisRunning || fixRunning) {
@@ -1521,8 +1538,12 @@ public class CleanCheckGUI extends Application {
                 );
 
             } catch (Exception ex) {
-
-                ex.printStackTrace(captureOut);
+                // Avoid Information Leak style stack dumps in UI-captured output.
+                String detail = ex.getMessage();
+                if (detail == null || detail.isBlank()) {
+                    detail = ex.getClass().getSimpleName();
+                }
+                captureOut.println("Analysis failed: " + detail);
 
             } finally {
 
@@ -1570,7 +1591,11 @@ public class CleanCheckGUI extends Application {
 
                     if (outcome[0] == null || outcome[0].exitCode() != 0
                             || result.contains("ANALYSIS_STATUS : FAILED")) {
-                        setStatus("Analysis failed. Review the error output.", CRITICAL);
+                        String reason = firstErrorLine(result);
+                        if (reason == null || reason.isBlank()) {
+                            reason = "Review the Scan Results page for details.";
+                        }
+                        setStatus("Analysis failed: " + reason, CRITICAL);
                     } else {
                         setStatus("\u2714  Analysis completed", SUCCESS);
                         recentProjects.add(analysisRoot);

@@ -45,11 +45,11 @@ public final class CiRunner {
         try {
             for (int i = 1; i < args.length; i++) {
                 switch (args[i]) {
-                    case "--json" -> jsonFile = Path.of(args[++i]);
-                    case "--html" -> htmlFile = Path.of(args[++i]);
-                    case "--sarif" -> sarifFile = Path.of(args[++i]);
-                    case "--csv" -> csvFile = Path.of(args[++i]);
-                    case "--min-score" -> minScore = Integer.parseInt(args[++i]);
+                    case "--json" -> jsonFile = Path.of(requireValue(args, ++i, "--json"));
+                    case "--html" -> htmlFile = Path.of(requireValue(args, ++i, "--html"));
+                    case "--sarif" -> sarifFile = Path.of(requireValue(args, ++i, "--sarif"));
+                    case "--csv" -> csvFile = Path.of(requireValue(args, ++i, "--csv"));
+                    case "--min-score" -> minScore = Integer.parseInt(requireValue(args, ++i, "--min-score"));
                     case "--fail-on-critical" -> failOnCritical = true;
                     default -> {
                         err.println("Unknown option: " + args[i]);
@@ -61,6 +61,10 @@ public final class CiRunner {
             err.println("Invalid arguments: " + ex.getMessage());
             return EXIT_ERROR;
         }
+        if (minScore < 0 || minScore > 100) {
+            err.println("Invalid --min-score: value must be between 0 and 100.");
+            return EXIT_ERROR;
+        }
         try {
             rejectCollidingOutputs(jsonFile, htmlFile, sarifFile, csvFile);
         } catch (IOException ex) {
@@ -68,7 +72,7 @@ public final class CiRunner {
             return EXIT_ERROR;
         }
         try {
-            AnalysisResult result = AppServices.getInstance().get(ProjectAnalyzer.class).analyze(project);
+            AnalysisResult result = new ProjectAnalyzer().analyze(project);
             QualityScore quality = new QualityScore();
             int score = quality.calculate(result.warnings(), result.totalSourceLines());
             int critical = quality.countCritical(result.warnings());
@@ -97,6 +101,13 @@ public final class CiRunner {
             err.println("ERROR: " + ex.getMessage());
             return EXIT_ERROR;
         }
+    }
+
+    private static String requireValue(String[] args, int index, String option) {
+        if (index >= args.length || args[index].startsWith("--")) {
+            throw new IllegalArgumentException("Missing file/value after " + option + ".");
+        }
+        return args[index];
     }
 
     private static void rejectCollidingOutputs(Path... targets) throws IOException {

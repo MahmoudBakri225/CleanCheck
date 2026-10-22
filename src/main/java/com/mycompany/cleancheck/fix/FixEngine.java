@@ -13,14 +13,7 @@ import java.util.regex.Pattern;
 import javax.lang.model.SourceVersion;
 
 /**
- * Safe automatic fixes (current implementation is primarily line/regex based).
- *
- * <p><b>Design note:</b> Regex-based edits are intentionally limited to simple,
- * single-line patterns. All supported automatic fixes prefer JavaParser AST rewrites via AstFixSupport,
- * with the original regex implementation kept as a safe fallback. Until then, every applied fix
- * is re-analyzed and can be rolled back if new findings or compile errors appear.
- *
- * Supported:
+ * Safe automatic fixes:
  * - Data Type typos
  * - Encapsulation (field visibility)
  * - System Out (remove console call line)
@@ -34,7 +27,8 @@ import javax.lang.model.SourceVersion;
  */
 public class FixEngine {
 
-    private static final Pattern INVALID_BUILT_IN_TYPE = Pattern.compile("\\b(Int|Char|string)\\b");
+    private static final Pattern INVALID_BUILT_IN_TYPE = Pattern.compile(
+            "\\b(Int|Char|string)(?:\\s*\\[\\s*\\])*\\s+(?=[A-Za-z_$])");
 
     private static final Pattern FIELD_LINE = Pattern.compile(
             "^(\\s*)(public|protected)\\s+((?:static\\s+|final\\s+)*)([\\w.<>,\\[\\]\\s]+?)\\s+([A-Za-z_][\\w]*)\\s*(=.*)?;\\s*$"
@@ -104,34 +98,27 @@ public class FixEngine {
         }
 
         if (ruleName.equalsIgnoreCase("Data Type")) {
-            after = AstFixSupport.fixBuiltinTypeAtLine(before, lineNumber)
-                    .orElseGet(() -> {
-                        String a = fixTypeLine(before, lineNumber);
-                        return before.equals(a) ? fixAllTypeErrors(before) : a;
-                    });
+            // Keep a user-selected fix scoped to the reported line. Bulk replacement is available
+            // only through applyFixes(), where the caller explicitly requested a whole-file pass.
+            after = fixTypeLine(before, lineNumber);
         } else if (ruleName.equalsIgnoreCase("Encapsulation")) {
-            after = AstFixSupport.makeFieldPrivateAtLine(before, lineNumber)
-                    .orElseGet(() -> fixEncapsulationLine(before, lineNumber, javaFile));
+            after = fixEncapsulationLine(before, lineNumber, javaFile);
         } else if (ruleName.equalsIgnoreCase("System Out")) {
-            after = AstFixSupport.removeSystemOutAtLine(before, lineNumber)
-                    .orElseGet(() -> fixSystemOutLine(before, lineNumber));
+            after = fixSystemOutLine(before, lineNumber);
         } else if (ruleName.equalsIgnoreCase("Naming Convention")) {
-            after = AstFixSupport.renameFieldFirstLetterAtLine(before, lineNumber)
-                    .orElseGet(() -> fixNamingLine(before, lineNumber, javaFile));
+            after = fixNamingLine(before, lineNumber, javaFile);
         } else if (ruleName.equalsIgnoreCase("Missing Package")) {
-            after = AstFixSupport.ensurePackage(before, javaFile).orElseGet(() -> fixMissingPackage(before, javaFile));
+            after = fixMissingPackage(before, javaFile);
         } else if (ruleName.equalsIgnoreCase("Magic Number")) {
-            after = AstFixSupport.extractMagicIntAtLine(before, lineNumber)
-                    .orElseGet(() -> fixMagicNumber(before, lineNumber));
+            after = fixMagicNumber(before, lineNumber);
         } else if (ruleName.equalsIgnoreCase("Unused Import")) {
-            after = AstFixSupport.removeImportAtLine(before, lineNumber).orElseGet(() -> fixUnusedImport(before, lineNumber));
+            after = fixUnusedImport(before, lineNumber);
         } else if (ruleName.equalsIgnoreCase("String Comparison")) {
-            after = AstFixSupport.fixStringEqualityAtLine(before, lineNumber).orElseGet(() -> fixStringComparison(before, lineNumber));
+            after = fixStringComparison(before, lineNumber);
         } else if (ruleName.equalsIgnoreCase("Unused Variable")) {
-            after = AstFixSupport.removeLocalVariableAtLine(before, lineNumber)
-                    .orElseGet(() -> fixUnusedVariable(before, lineNumber));
+            after = fixUnusedVariable(before, lineNumber);
         } else if (ruleName.equalsIgnoreCase("Information Leak")) {
-            after = AstFixSupport.replacePrintStackTraceAtLine(before, lineNumber).orElseGet(() -> fixPrintStackTrace(before, lineNumber, javaFile));
+            after = fixPrintStackTrace(before, lineNumber, javaFile);
         }
 
         if (!before.equals(after)) {
@@ -407,6 +394,9 @@ public class FixEngine {
         if (!SYSTEM_OUT_LINE.matcher(lines[index]).matches()) {
             return source;
         }
+        if (hasSideEffectfulConsoleArgument(lines[index])) {
+            return source;
+        }
         // "if (x)" + println on its own line: deleting the println would make the NEXT statement the body.
         for (int i = index - 1; i >= 0; i--) {
             String previous = lines[i].trim();
@@ -424,6 +414,16 @@ public class FixEngine {
         }
         lines[index] = "";
         return join(source, lines);
+    }
+
+    private static boolean hasSideEffectfulConsoleArgument(String line) {
+        int open = line.indexOf('(');
+        int close = line.lastIndexOf(')');
+        if (open < 0 || close <= open) {
+            return true;
+        }
+        String arguments = line.substring(open + 1, close).trim();
+        return arguments.matches("(?s).*(\\+\\+|--|\\bnew\\s+|(?<![=!<>])=(?!=)|[A-Za-z_$][\\w$.]*\\s*\\().*");
     }
 
     /**
@@ -475,100 +475,33 @@ public class FixEngine {
                 + "|(?:" + wholeOld + "\\s*\\()");
         Pattern foreignQualifier = Pattern.compile("(?<!this)\\.\\s*" + wholeOld);
 
-        for (String line : lines) {
-            boolean[] code = codeMask(line, false);
-            if (hasCodeMatch(newWord, line, code)
-                    || hasCodeMatch(typeOrMethodUse, line, code)
-                    || hasCodeMatch(foreignQualifier, line, code)) {
-                return source;
-            }
+        // Mask the complete source at once. A line-by-line mask loses block-comment and
+        // text-block state, which could otherwise rename words inside multi-line comments or
+        // text blocks even though they are not Java identifiers in executable code.
+        String maskedSource = JavaSourceMask.maskNonCode(source);
+        if (newWord.matcher(maskedSource).find()
+                || typeOrMethodUse.matcher(maskedSource).find()
+                || foreignQualifier.matcher(maskedSource).find()) {
+            return source;
         }
         if (accessedViaDotInSiblings(javaFile, oldName)) {
             return source;
         }
 
-        boolean changed = false;
-        for (int i = 0; i < lines.length; i++) {
-            String renamed = replaceInCode(oldWord, lines[i], newName);
-            changed |= !renamed.equals(lines[i]);
-            lines[i] = renamed;
+        List<int[]> replacements = new ArrayList<>();
+        Matcher occurrences = oldWord.matcher(maskedSource);
+        while (occurrences.find()) {
+            replacements.add(new int[]{occurrences.start(), occurrences.end()});
         }
-        return changed ? join(source, lines) : source;
-    }
-
-    private static boolean hasCodeMatch(Pattern pattern, String line, boolean[] code) {
-        Matcher m = pattern.matcher(line);
-        while (m.find()) {
-            if (code[m.start()]) {
-                return true;
-            }
+        if (replacements.isEmpty()) {
+            return source;
         }
-        return false;
-    }
-
-    private static String replaceInCode(Pattern pattern, String line, String replacement) {
-        boolean[] code = codeMask(line, false);
-        Matcher m = pattern.matcher(line);
-        StringBuilder out = new StringBuilder();
-        int last = 0;
-        while (m.find()) {
-            if (!code[m.start()]) {
-                continue;
-            }
-            out.append(line, last, m.start()).append(replacement);
-            last = m.end();
+        StringBuilder renamed = new StringBuilder(source);
+        for (int i = replacements.size() - 1; i >= 0; i--) {
+            int[] range = replacements.get(i);
+            renamed.replace(range[0], range[1], newName);
         }
-        out.append(line.substring(last));
-        return out.toString();
-    }
-
-    /**
-     * Marks which characters of a single line are real code: not inside a string or char literal
-     * and not inside a comment. With starLineIsComment, a line beginning with '*' (Javadoc body)
-     * counts as comment. Rename passes false so that a wrapped "* 100" expression is never skipped.
-     */
-    private static boolean[] codeMask(String line, boolean starLineIsComment) {
-        boolean[] code = new boolean[line.length()];
-        if (starLineIsComment && line.trim().startsWith("*")) {
-            return code;
-        }
-        char quote = 0;
-        boolean block = false;
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-            if (block) {
-                if (c == '*' && i + 1 < line.length() && line.charAt(i + 1) == '/') {
-                    block = false;
-                    i++;
-                }
-                continue;
-            }
-            if (quote != 0) {
-                if (c == '\\') {
-                    i++;
-                } else if (c == quote) {
-                    quote = 0;
-                }
-                continue;
-            }
-            if (c == '"' || c == '\'') {
-                quote = c;
-                continue;
-            }
-            if (c == '/' && i + 1 < line.length()) {
-                char next = line.charAt(i + 1);
-                if (next == '/') {
-                    break;
-                }
-                if (next == '*') {
-                    block = true;
-                    i++;
-                    continue;
-                }
-            }
-            code[i] = true;
-        }
-        return code;
+        return renamed.toString();
     }
 
     /**
@@ -601,7 +534,14 @@ public class FixEngine {
     }
 
     private String fixMissingPackage(String source, Path javaFile) {
-        if (source.contains("package ")) {
+        if (javaFile.getFileName() != null && javaFile.getFileName().toString().equals("module-info.java")) {
+            return source;
+        }
+        // Ignore occurrences in comments and string literals; only a real package declaration
+        // should suppress this fix.
+        String maskedSource = JavaSourceMask.maskNonCode(source);
+        if (Pattern.compile("(?m)^\\s*package\\s+[A-Za-z_$][\\w$]*(?:\\s*\\.\\s*[A-Za-z_$][\\w$]*)*\\s*;")
+                .matcher(maskedSource).find()) {
             return source;
         }
         String pkg = packageFromPath(javaFile);
@@ -616,12 +556,19 @@ public class FixEngine {
         Path abs = javaFile.toAbsolutePath().normalize();
         String s = abs.toString().replace('\\', '/');
         int idx = s.indexOf("/src/main/java/");
+        if (idx < 0) {
+            idx = s.indexOf("/src/test/java/");
+        }
         if (idx >= 0) {
-            String rel = s.substring(idx + "/src/main/java/".length());
+            String sourceRoot = s.startsWith("/src/main/java/", idx)
+                    ? "/src/main/java/" : "/src/test/java/";
+            String rel = s.substring(idx + sourceRoot.length());
             int slash = rel.lastIndexOf('/');
             if (slash > 0) {
                 return rel.substring(0, slash).replace('/', '.');
             }
+            // A file directly in the source root belongs to Java's unnamed package.
+            return "";
         }
         // fallback: parent folder name as single segment package
         Path parent = abs.getParent();
@@ -634,6 +581,28 @@ public class FixEngine {
             }
         }
         return "app";
+    }
+
+    /**
+     * True at each index that is real code (not comment / string / text-block content).
+     * When {@code maskStrings} is true, string and text-block interiors are treated as non-code;
+     * when false, only comments are masked.
+     */
+    private static boolean[] codeMask(String source, boolean maskStrings) {
+        String masked = maskStrings
+                ? JavaSourceMask.maskNonCode(source)
+                : JavaSourceMask.maskComments(source);
+        boolean[] code = new boolean[source.length()];
+        for (int i = 0; i < source.length(); i++) {
+            char original = source.charAt(i);
+            if (original == '\n' || original == '\r') {
+                code[i] = false;
+                continue;
+            }
+            // maskNonCode / maskComments replace non-code characters with spaces.
+            code[i] = masked.charAt(i) == original;
+        }
+        return code;
     }
 
     /**
@@ -685,7 +654,7 @@ public class FixEngine {
         String constName = "VALUE_" + number;
         lines[index] = line.substring(0, start) + constName + line.substring(end);
         String newline = source.contains("\r\n") ? "\r\n" : "\n";
-        String joined = String.join(newline, lines);
+        String joined = join(source, lines);
 
         boolean alreadyDeclared = Pattern.compile("\\b" + constName + "\\s*=").matcher(source).find();
         if (alreadyDeclared) {
@@ -708,22 +677,17 @@ public class FixEngine {
     private String replaceInvalidBuiltInTypes(String source, int targetLine) {
         String masked = JavaSourceMask.maskNonCode(source);
         Matcher matcher = INVALID_BUILT_IN_TYPE.matcher(masked);
-        StringBuilder fixed = new StringBuilder(source);
-        int line = 1;
-        int cursor = 0;
+        List<int[]> replacements = new ArrayList<>();
+        List<String> values = new ArrayList<>();
         while (matcher.find()) {
-            while (cursor < matcher.start()) {
-                char current = masked.charAt(cursor++);
-                if (current == '\r') {
-                    line++;
-                    if (cursor < matcher.start() && masked.charAt(cursor) == '\n') {
-                        cursor++;
-                    }
-                } else if (current == '\n') {
-                    line++;
-                }
+            int afterToken = matcher.end();
+            while (afterToken < masked.length() && Character.isWhitespace(masked.charAt(afterToken))) {
+                afterToken++;
             }
-            if (targetLine > 0 && line != targetLine) {
+            if (afterToken >= masked.length() || !Character.isJavaIdentifierStart(masked.charAt(afterToken))) {
+                continue;
+            }
+            if (targetLine > 0 && lineNumberAt(masked, matcher.start(1)) != targetLine) {
                 continue;
             }
             String replacement = switch (matcher.group(1)) {
@@ -732,13 +696,55 @@ public class FixEngine {
                 case "string" -> "String";
                 default -> matcher.group(1);
             };
-            fixed.replace(matcher.start(), matcher.end(), replacement);
+            replacements.add(new int[]{matcher.start(1), matcher.end(1)});
+            values.add(replacement);
+        }
+        // Apply from right to left: String is one character longer than string, so forward
+        // replacements would otherwise shift offsets for later matches in the original source.
+        StringBuilder fixed = new StringBuilder(source);
+        for (int i = replacements.size() - 1; i >= 0; i--) {
+            int[] range = replacements.get(i);
+            fixed.replace(range[0], range[1], values.get(i));
         }
         return fixed.toString();
     }
 
+    private static int lineNumberAt(String source, int offset) {
+        int line = 1;
+        for (int i = 0; i < offset; i++) {
+            char c = source.charAt(i);
+            if (c == '\r') {
+                line++;
+                if (i + 1 < offset && source.charAt(i + 1) == '\n') {
+                    i++;
+                }
+            } else if (c == '\n') {
+                line++;
+            }
+        }
+        return line;
+    }
+
     private static String join(String source, String[] lines) {
-        String newline = source.contains("\r\n") ? "\r\n" : "\n";
-        return String.join(newline, lines);
+        StringBuilder result = new StringBuilder(source.length() + lines.length);
+        int cursor = 0;
+        for (int i = 0; i < lines.length; i++) {
+            result.append(lines[i]);
+            if (i + 1 < lines.length) {
+                while (cursor < source.length()
+                        && source.charAt(cursor) != '\r' && source.charAt(cursor) != '\n') {
+                    cursor++;
+                }
+                if (cursor < source.length() && source.charAt(cursor) == '\r') {
+                    result.append('\r');
+                    cursor++;
+                }
+                if (cursor < source.length() && source.charAt(cursor) == '\n') {
+                    result.append('\n');
+                    cursor++;
+                }
+            }
+        }
+        return result.toString();
     }
 }
